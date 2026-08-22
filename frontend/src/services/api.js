@@ -28,10 +28,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Auto logout if 401 Unauthorized
-      localStorage.removeItem('userInfo');
-      window.location.href = '/';
+    const isLoginRequest = error.config && error.config.url && error.config.url.includes('/auth/login');
+    if (error.response && error.response.status === 401 && !isLoginRequest) {
+      const userInfo = localStorage.getItem('userInfo')
+        ? JSON.parse(localStorage.getItem('userInfo'))
+        : null;
+      
+      // Auto logout if 401 Unauthorized, unless user is in demo mode
+      if (userInfo && !userInfo.isDemo) {
+        localStorage.removeItem('userInfo');
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }
