@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import Sidebar from '../components/Sidebar'
 import { fetchTrips } from '../store/slices/tripSlice'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { CalendarIcon, UsersIcon, FlameIcon, SparkleIcon, MapPinIcon } from '../components/icons/LuxuryIcons'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -370,8 +371,12 @@ export default function Dashboard() {
                   </div>
 
                   <div className="upcoming-meta-row">
-                    <span>📅 12 Days Trip</span>
-                    <span>👥 2 People</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <CalendarIcon size={13} color="#D4A843" /> 12 Days Trip
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <UsersIcon size={13} color="#D4A843" /> 2 People
+                    </span>
                   </div>
 
                   <div className="upcoming-progress-wrap">
@@ -392,7 +397,11 @@ export default function Dashboard() {
                   <div className="side-item-info">
                     <h4 className="side-item-title">Switzerland</h4>
                     <p className="side-item-dates">05 July - 15 July 2024</p>
-                    <p className="side-item-meta">📅 10 Days &nbsp;·&nbsp; 👥 2 People</p>
+                    <p className="side-item-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><CalendarIcon size={12} color="#8C867A" /> 10 Days</span>
+                      <span>·</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><UsersIcon size={12} color="#8C867A" /> 2 People</span>
+                    </p>
                   </div>
                 </div>
 
@@ -403,7 +412,11 @@ export default function Dashboard() {
                   <div className="side-item-info">
                     <h4 className="side-item-title">Thailand</h4>
                     <p className="side-item-dates">10 Aug - 25 Aug 2024</p>
-                    <p className="side-item-meta">📅 7 Days &nbsp;·&nbsp; 👥 2 People</p>
+                    <p className="side-item-meta" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><CalendarIcon size={12} color="#8C867A" /> 7 Days</span>
+                      <span>·</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><UsersIcon size={12} color="#8C867A" /> 2 People</span>
+                    </p>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import api from '../services/api'
 import { fetchTrips, createTrip, updateTrip, deleteTrip } from '../store/slices/tripSlice'
 import { useToast } from '../context/ToastContext'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { CalendarIcon, UsersIcon, MapPinIcon, PlaneIcon, SparkleIcon, TrashIcon, UtensilsIcon, HotelIcon, CompassIcon, CheckCircleIcon, FlameIcon } from '../components/icons/LuxuryIcons'
 import './Trips.css'
 
 // Initial Curated Multi-City Journeys
@@ -446,7 +447,9 @@ export default function Trips() {
               <div className="journeys-title-group">
                 <div className="badge-hackathon-row">
                   <span className="badge-hackathon">GLOBETROTTER MULTI-CITY ENGINE</span>
-                  <span className="badge-ai-live">⚡ YATRAWAY AI OPTIMIZER READY</span>
+                  <span className="badge-ai-live" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <SparkleIcon size={12} color="#D4A843" /> YATRAWAY AI OPTIMIZER READY
+                  </span>
                 </div>
                 <h1 className="journeys-hero-title">My Journeys</h1>
                 <p className="journeys-hero-sub">
@@ -460,7 +463,9 @@ export default function Trips() {
                   className="btn-ai-optimizer-hero"
                   onClick={() => setShowAIOptimizerModal(true)}
                 >
-                  <span>✨ AI Smart Trip Optimizer</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <SparkleIcon size={14} color="#D4A843" /> AI Smart Trip Optimizer
+                  </span>
                 </button>
 
                 <div className="journeys-tab-switcher">
@@ -527,10 +532,11 @@ export default function Trips() {
                             onClick={() => {
                               setJourneys((prev) => prev.filter((j) => j._id !== journey._id))
                               setMenuOpenId(null)
-                              toast.info('🗑️ Journey removed.')
+                              toast.info('Journey removed.')
                             }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                           >
-                            🗑️ Delete Journey
+                            <TrashIcon size={13} /> Delete Journey
                           </button>
                         </div>
                       )}
@@ -558,8 +564,8 @@ export default function Trips() {
                     {/* Multi-City Stops Chips */}
                     <div className="jc-cities-chips-row">
                       {(journey.cities || []).map((c, i) => (
-                        <span key={i} className="city-chip-pill">
-                          📍 {c.name} ({c.days}d)
+                        <span key={i} className="city-chip-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <MapPinIcon size={11} color="#D4A843" /> {c.name} ({c.days}d)
                         </span>
                       ))}
                     </div>
@@ -567,8 +573,10 @@ export default function Trips() {
                     {/* Bottom Meta & Action */}
                     <div className="jc-footer-row">
                       <div className="jc-meta-items">
-                        <span className="meta-pill">📅 {journey.days} Days</span>
-                        <span className="meta-pill">💰 ₹{(journey.budgetINR || 60000).toLocaleString('en-IN')} Est.</span>
+                        <span className="meta-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <CalendarIcon size={12} color="#8C867A" /> {journey.days} Days
+                        </span>
+                        <span className="meta-pill">₹{(journey.budgetINR || 60000).toLocaleString('en-IN')} Est.</span>
                       </div>
 
                       <button
@@ -612,7 +620,9 @@ export default function Trips() {
                   className="itin-pill-ai-btn"
                   onClick={() => setShowAIOptimizerModal(true)}
                 >
-                  <span>✨ AI Optimize Route</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <SparkleIcon size={13} color="#D4A843" /> AI Optimize Route
+                  </span>
                 </button>
 
                 <button
@@ -626,14 +636,16 @@ export default function Trips() {
                   className="itin-pill-share-btn"
                   onClick={() => setShowShareModal(true)}
                 >
-                  <span>🔗 Share Trip</span>
+                  <span>Share Trip</span>
                 </button>
 
                 <button
                   className="itin-pill-logistics-btn"
                   onClick={() => setShowLogisticsModal(true)}
                 >
-                  <span>✈️ Logistics & Stay</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <PlaneIcon size={14} color="#D4A843" /> Logistics & Stay
+                  </span>
                 </button>
               </div>
             </div>
@@ -655,7 +667,9 @@ export default function Trips() {
                 </div>
 
                 <h2 className="glass-card-title">{selectedItineraryTrip.dest}</h2>
-                <p className="glass-card-route">📍 {selectedItineraryTrip.subtitle}</p>
+                <p className="glass-card-route" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MapPinIcon size={14} color="#D4A843" /> {selectedItineraryTrip.subtitle}
+                </p>
                 <p className="glass-card-desc">{selectedItineraryTrip.desc}</p>
 
                 <div className="glass-actions-row">
@@ -671,7 +685,9 @@ export default function Trips() {
                   </button>
 
                   <button className="glass-btn-outline" onClick={() => setShowAIOptimizerModal(true)}>
-                    <span>⚡ Optimize Multi-City Route</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                      <SparkleIcon size={13} color="#D4A843" /> Optimize Multi-City Route
+                    </span>
                   </button>
                 </div>
               </div>
@@ -822,19 +838,27 @@ export default function Trips() {
 
                       <div className="bw-breakdown-list">
                         <div className="bw-line">
-                          <span>🏨 Hotels & Stays</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <HotelIcon size={14} color="#D4A843" /> Hotels & Stays
+                          </span>
                           <span>₹{liveBudgetCalculation.hotelCost.toLocaleString('en-IN')}</span>
                         </div>
                         <div className="bw-line">
-                          <span>✈️ Transport</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <PlaneIcon size={14} color="#D4A843" /> Transport
+                          </span>
                           <span>₹{liveBudgetCalculation.transportCost.toLocaleString('en-IN')}</span>
                         </div>
                         <div className="bw-line">
-                          <span>🎯 Activities ({selectedItineraryTrip.daysPlan?.reduce((acc, d) => acc + (d.activities?.length || 0), 0)})</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <CompassIcon size={14} color="#D4A843" /> Activities ({selectedItineraryTrip.daysPlan?.reduce((acc, d) => acc + (d.activities?.length || 0), 0)})
+                          </span>
                           <span>₹{liveBudgetCalculation.activitiesCost.toLocaleString('en-IN')}</span>
                         </div>
                         <div className="bw-line">
-                          <span>🍽️ Meals & Dining</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <UtensilsIcon size={14} color="#D4A843" /> Meals & Dining
+                          </span>
                           <span>₹{liveBudgetCalculation.foodCost.toLocaleString('en-IN')}</span>
                         </div>
                       </div>

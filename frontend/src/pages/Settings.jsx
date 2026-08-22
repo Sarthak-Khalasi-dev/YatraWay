@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
 import { useTheme } from '../context/ThemeContext'
+import { UserIcon, BellIcon, LockIcon, CardIcon, GearIcon, ShieldIcon } from '../components/icons/LuxuryIcons'
 import './Settings.css'
 
 const SECTIONS = ['Profile', 'Notifications', 'Privacy', 'Payments', 'Preferences', 'About']
@@ -41,7 +42,9 @@ export default function Settings() {
           <nav className="settings-nav">
             {SECTIONS.map(s => (
               <button key={s} className={`settings-nav-item ${section===s?'settings-nav-item--active':''}`} onClick={() => setSection(s)}>
-                <span>{s==='Profile'?'👤':s==='Notifications'?'🔔':s==='Privacy'?'🔒':s==='Payments'?'💳':s==='Preferences'?'⚙️':'ℹ️'}</span>
+                <span style={{ display: 'flex', alignItems: 'center' }}>
+                  {s==='Profile'?<UserIcon size={15} />:s==='Notifications'?<BellIcon size={15} />:s==='Privacy'?<LockIcon size={15} />:s==='Payments'?<CardIcon size={15} />:s==='Preferences'?<GearIcon size={15} />:<ShieldIcon size={15} />}
+                </span>
                 {s}
               </button>
             ))}
@@ -58,7 +61,7 @@ export default function Settings() {
                     <img src="https://picsum.photos/seed/portrait/160/160" className="settings-avatar" alt="User" />
                     <div>
                       <p className="settings-avatar-name">Ananya Sharma</p>
-                      <p className="settings-avatar-role">🌍 Explorer · Member since 2022</p>
+                      <p className="settings-avatar-role">Explorer · Member since 2022</p>
                       <button className="btn btn-outline" style={{ marginTop:10, fontSize:12.5 }}>Change Photo</button>
                     </div>
                   </div>
@@ -236,7 +239,7 @@ export default function Settings() {
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 18 12 2 21 18"/><path d="M9 18 12 12 15 18"/></svg>
                   </div>
                   <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:700, color:'var(--text-1)', marginBottom:4 }}>YatraWay</h2>
-                  <p style={{ color:'var(--text-3)', fontSize:13, marginBottom:6 }}>Version 2.0.0 · Built with ❤️</p>
+                  <p style={{ color:'var(--text-3)', fontSize:13, marginBottom:6 }}>Version 2.0.0 · Crafted for Travelers</p>
                   <p style={{ color:'var(--text-3)', fontSize:13 }}>Your ultimate travel companion</p>
                   <div style={{ display:'flex', gap:12, justifyContent:'center', marginTop:24, flexWrap:'wrap' }}>
                     {['Privacy Policy','Terms of Service','Help & Support','Rate Us'].map(l => (
