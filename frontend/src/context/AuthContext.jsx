@@ -1,146 +1,182 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { supabase } from '../services/supabaseClient'
 
 const AuthCtx = createContext({})
 
-/* ── tiny password "hash" (XOR-based, fine for localStorage demo) ── */
-function hashPassword(pw) {
-  return btoa(unescape(encodeURIComponent(pw + '_wl_salt_2024')))
-}
-
-function generateId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
-}
-
-const SESSION_KEY  = 'wl_session'
-const USERS_KEY    = 'wl_users'
-const SESSION_TTL  = 7 * 24 * 60 * 60 * 1000 // 7 days
-
-/* ── Default seed data for demo ── */
-const DEFAULT_USER = {
-  id: 'demo_user_1',
-  name: 'Ananya Sharma',
-  email: 'ananya@example.com',
-  passwordHash: hashPassword('password123'),
-  avatar: 'https://picsum.photos/seed/portrait/160/160',
-  bio: 'Adventure seeker obsessed with sunsets, street food, and stories from the road.',
-  location: 'Bangalore, India',
-  createdAt: new Date('2022-01-15').toISOString(),
-}
-
-function getUsers() {
-  try {
-    const stored = localStorage.getItem(USERS_KEY)
-    const users = stored ? JSON.parse(stored) : []
-    // Seed default user if none
-    if (users.length === 0) {
-      const seeded = [DEFAULT_USER]
-      localStorage.setItem(USERS_KEY, JSON.stringify(seeded))
-      return seeded
-    }
-    return users
-  } catch { return [] }
-}
-
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-}
-
-function getSession() {
-  try {
-    const s = localStorage.getItem(SESSION_KEY)
-    if (!s) return null
-    const session = JSON.parse(s)
-    if (Date.now() > session.expiresAt) {
-      localStorage.removeItem(SESSION_KEY)
-      return null
-    }
-    return session
-  } catch { return null }
-}
-
-function saveSession(userId) {
-  const session = {
-    userId,
-    token: generateId(),
-    expiresAt: Date.now() + SESSION_TTL,
-  }
-  localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-  return session
-}
-
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null)
+  const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  /* ── Restore session on mount ── */
+  // Fetch profile or construct fallback user object
+  const fetchProfile = useCallback(async (user) => {
+    if (!user) return null
+
+    let profileData = null
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (!error && data) {
+        profileData = data
+      }
+    } catch {
+      // Fallback if profiles table is not created yet
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: profileData?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Explorer',
+      avatar: profileData?.avatar_url || user.user_metadata?.avatar_url || 'https://picsum.photos/seed/portrait/160/160',
+      createdAt: user.created_at,
+    }
+  }, [])
+
+  // Listen to Supabase auth state changes
   useEffect(() => {
-    const session = getSession()
-    if (session) {
-      const users = getUsers()
-      const user = users.find(u => u.id === session.userId)
-      if (user) setCurrentUser(user)
+    supabase.auth.getSession().then(({ data: { session: initSession } }) => {
+      setSession(initSession)
+      if (initSession?.user) {
+        fetchProfile(initSession.user).then(u => setCurrentUser(u))
+      } else {
+        setCurrentUser(null)
+      }
+      setLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setSession(newSession)
+      if (newSession?.user) {
+        const u = await fetchProfile(newSession.user)
+        setCurrentUser(u)
+      } else {
+        setCurrentUser(null)
+      }
+      setLoading(false)
+    })
+
+    return () => {
+      subscription.unsubscribe()
     }
-    setLoading(false)
+  }, [fetchProfile])
+
+  /* ── SIGN UP / REGISTER ── */
+  const signUp = useCallback(async (name, email, password) => {
+    let userName = name
+    let userEmail = email
+    let userPassword = password
+
+    if (typeof name === 'object' && name !== null) {
+      userEmail = name.email
+      userPassword = name.password
+      userName = name.options?.data?.full_name || name.name || ''
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: userEmail,
+        password: userPassword,
+        options: {
+          data: {
+            full_name: userName,
+          },
+        },
+      })
+
+      if (error) return { success: false, error: error.message }
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, error: err.message || 'Registration failed.' }
+    }
   }, [])
 
-  /* ── LOGIN ── */
-  const login = useCallback((email, password) => {
-    const users = getUsers()
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
-    if (!user) return { success: false, error: 'No account found with this email.' }
-    if (user.passwordHash !== hashPassword(password)) {
-      return { success: false, error: 'Incorrect password. Please try again.' }
+  /* ── SIGN IN / LOGIN ── */
+  const signIn = useCallback(async (email, password) => {
+    let userEmail = email
+    let userPassword = password
+
+    if (typeof email === 'object' && email !== null) {
+      userEmail = email.email
+      userPassword = email.password
     }
-    saveSession(user.id)
-    setCurrentUser(user)
-    return { success: true }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: userPassword,
+      })
+
+      if (error) return { success: false, error: error.message }
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, error: err.message || 'Login failed.' }
+    }
   }, [])
 
-  /* ── REGISTER ── */
-  const register = useCallback((name, email, password) => {
-    const users = getUsers()
-    if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
-      return { success: false, error: 'An account with this email already exists.' }
+  /* ── OAUTH SIGN IN (Google & Apple) ── */
+  const signInWithOAuth = useCallback(async (provider) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      })
+      if (error) return { success: false, error: error.message }
+      return { success: true, data }
+    } catch (err) {
+      return { success: false, error: err.message || `${provider} login failed.` }
     }
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters.' }
-    }
-    const newUser = {
-      id: generateId(),
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      passwordHash: hashPassword(password),
-      avatar: `https://picsum.photos/seed/${generateId()}/160/160`,
-      bio: '',
-      location: '',
-      createdAt: new Date().toISOString(),
-    }
-    saveUsers([...users, newUser])
-    saveSession(newUser.id)
-    setCurrentUser(newUser)
-    return { success: true }
   }, [])
 
-  /* ── LOGOUT ── */
-  const logout = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY)
-    setCurrentUser(null)
+  /* ── SIGN OUT / LOGOUT ── */
+  const signOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut()
+      setCurrentUser(null)
+      setSession(null)
+      return { success: true }
+    } catch (err) {
+      return { success: false, error: err.message }
+    }
   }, [])
 
   /* ── UPDATE PROFILE ── */
-  const updateProfile = useCallback((updates) => {
-    const users = getUsers()
-    const idx = users.findIndex(u => u.id === currentUser?.id)
-    if (idx === -1) return
-    const updated = { ...users[idx], ...updates }
-    users[idx] = updated
-    saveUsers(users)
-    setCurrentUser(updated)
-    return updated
+  const updateProfile = useCallback(async (updates) => {
+    if (!currentUser) return null
+    try {
+      if (updates.name) {
+        await supabase.from('profiles').update({ full_name: updates.name }).eq('id', currentUser.id)
+      }
+      const updated = { ...currentUser, ...updates }
+      setCurrentUser(updated)
+      return updated
+    } catch {
+      return currentUser
+    }
   }, [currentUser])
 
   return (
-    <AuthCtx.Provider value={{ currentUser, loading, login, register, logout, updateProfile }}>
+    <AuthCtx.Provider
+      value={{
+        currentUser,
+        session,
+        loading,
+        signUp,
+        signIn,
+        signInWithOAuth,
+        signOut,
+        // Aliases for compatibility
+        register: signUp,
+        login: signIn,
+        logout: signOut,
+        updateProfile,
+      }}
+    >
       {children}
     </AuthCtx.Provider>
   )
