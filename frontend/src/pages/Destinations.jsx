@@ -428,11 +428,14 @@ export default function Destinations() {
 
   // Format price helper according to chosen currency
   const formatPrice = (dest) => {
+    if (!dest) return '₹0'
+    const pINR = dest.priceINR ?? dest.priceInINR
+    const pUSD = dest.priceUSD ?? dest.priceInUSD
     if (currency === 'INR') {
-      const val = dest.priceINR || Math.round(dest.priceUSD * 85)
+      const val = pINR || (pUSD ? Math.round(pUSD * 85) : 11750)
       return `₹${val.toLocaleString('en-IN')}`
     } else {
-      const val = dest.priceUSD || Math.round(dest.priceINR / 85)
+      const val = pUSD || (pINR ? Math.round(pINR / 85) : 138)
       return `$${val.toLocaleString('en-US')}`
     }
   }
@@ -503,76 +506,140 @@ export default function Destinations() {
 
     // ── INTENT CHECK: Is this a real travel query? ──
     if (!isTravelQuery(currentPrompt)) {
-      // Respond like a concierge, NOT with a destination card
       const casualReply = getCasualReply(currentPrompt)
       setTimeout(() => {
         setChatHistory((prev) => [
           ...prev,
           { id: Date.now() + 1, sender: 'ai', text: casualReply },
         ])
-      }, 400) // small delay feels more natural
+      }, 400)
       return
     }
 
-    // ── It's a real travel query — proceed with AI generation ──
+    // ── DEMO MODE: Parse numbers from prompt, then always show Udaipur ──
     setIsGeneratingAI(true)
 
-    // Parse user input for metadata (days, people, budget)
-    const daysMatch = currentPrompt.match(/(\d+)\s*(?:day|days|d|nights)/i)
+    const daysMatch   = currentPrompt.match(/(\d+)\s*(?:day|days|d|nights)/i)
     const peopleMatch = currentPrompt.match(/(\d+)\s*(?:people|person|traveler|travelers|guests|members)/i)
-    const budgetMatch = currentPrompt.match(/(?:budget|rs|inr|₹|under|around)?\s*(\d{4,7})\s*(?:rs|rupees|inr|k)?/i)
 
-    const parsedDays = daysMatch ? parseInt(daysMatch[1]) : 4
-    const parsedPeople = peopleMatch ? parseInt(peopleMatch[1]) : 4
-    const parsedBudget = budgetMatch ? parseInt(budgetMatch[1]) : (parsedDays * 12500)
-    const perPerson = Math.round(parsedBudget / parsedPeople)
-
-    try {
-      const response = await api.post('/gemini/generate-destinations', {
-        prompt: currentPrompt,
-        count: 3,
-      })
-
-      if (response.data && response.data.destinations && response.data.destinations.length > 0) {
-        const newDestinations = response.data.destinations.map((d, index) => ({
-          ...d,
-          isIndia: d.country?.toLowerCase() === 'india' || true,
-          priceINR: index === 0 ? perPerson : (d.priceInINR || 35000),
-          priceUSD: index === 0 ? Math.round(perPerson / 85) : (d.priceInUSD || 420),
-          totalBudgetINR: parsedBudget,
-          peopleCount: parsedPeople,
-          daysCount: parsedDays,
-          isAiGenerated: true,
-        }))
-
-        const primarySpotlight = newDestinations[0]
-        setAiSpotlight(primarySpotlight)
-        setAiSearchTag(currentPrompt)
-        setDestList((prev) => [...newDestinations, ...prev.filter((p) => !newDestinations.some((n) => n.id === p.id))])
-
-        // Add AI response to chat history
-        const aiMsg = {
-          id: Date.now() + 1,
-          sender: 'ai',
-          text: `I've curated a personalized ${parsedDays}-day escape for ${parsedPeople} travelers at a total budget of ₹${parsedBudget.toLocaleString('en-IN')} (~₹${perPerson.toLocaleString('en-IN')}/person). Your tailored spotlight is ready below — refine it further or jump straight into the trip builder.`,
-        }
-        setChatHistory((prev) => [...prev, aiMsg])
-        setShowAllJourneys(true)
-
-        setTimeout(() => {
-          document.querySelector('.ai-spotlight-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 100)
+    let parsedBudget = 47000
+    const kMatch = currentPrompt.match(/(\d+(?:\.\d+)?)\s*k/i)
+    if (kMatch) {
+      parsedBudget = Math.round(parseFloat(kMatch[1]) * 1000)
+    } else {
+      const budgetMatch = currentPrompt.match(/(?:budget|rs|inr|₹|under|around)?\s*(\d{4,7})/i)
+      if (budgetMatch) {
+        parsedBudget = parseInt(budgetMatch[1])
       }
-    } catch (err) {
-      console.error('AI generation error:', err)
-      setChatHistory((prev) => [
-        ...prev,
-        { id: Date.now() + 1, sender: 'ai', text: 'I encountered a brief issue. Please try rephrasing your travel request — for example: "Jaipur for 4 days, 2 people, ₹30,000 budget".' },
-      ])
-      setAiError('Unable to generate with AI. Please try again.')
-    } finally {
-      setIsGeneratingAI(false)
     }
+
+    const parsedDays   = daysMatch   ? parseInt(daysMatch[1])   : 4
+    const parsedPeople = peopleMatch ? parseInt(peopleMatch[1]) : 4
+    const perPerson    = Math.round(parsedBudget / parsedPeople)
+
+    // ── Fake "thinking" delay — 2.5 s ──
+    await new Promise(resolve => setTimeout(resolve, 2500))
+
+    // ── Hardcoded Udaipur demo destination ──
+    const udaipurDemo = {
+      id: 'demo-udaipur-001',
+      name: 'Udaipur — City of Lakes & Royal Palaces',
+      country: 'India',
+      region: 'Rajasthan',
+      tag: 'HERITAGE',
+      rating: 4.9,
+      reviews: '3.2k',
+      description: `A regal escape to the "Venice of the East" — sail across shimmering Lake Pichola, wander through the grand City Palace, and dine under the stars at rooftop heritage restaurants. Udaipur blends royal grandeur with warm Rajasthani hospitality in every cobblestone alley.`,
+      activities: ['Heritage Walks', 'Boat Rides', 'Cultural Shows', 'Palace Tours'],
+      duration: `${parsedDays} Days / ${parsedDays - 1} Nights`,
+      safetyScore: '9.9 / 10 (Solo & Group Safe)',
+      bestSeason: 'October to March',
+      highlights: [
+        'City Palace & Zenana Mahal Tour',
+        'Lake Pichola Sunset Boat Ride',
+        'Bagore Ki Haveli Cultural Evening',
+        'Sajjangarh Monsoon Palace Sunrise',
+      ],
+      imageQuery: 'udaipur',
+      img: 'https://images.unsplash.com/photo-1615836245337-f5b9b2303f10?w=900&h=1100&q=85&auto=format&fit=crop',
+      priceINR: perPerson,
+      priceInINR: perPerson,
+      priceUSD: Math.round(perPerson / 85),
+      priceInUSD: Math.round(perPerson / 85),
+      priceDisplayINR: `₹${perPerson.toLocaleString('en-IN')}`,
+      priceDisplayUSD: `$${Math.round(perPerson / 85).toLocaleString('en-US')}`,
+      isIndia: true,
+      isAiGenerated: true,
+      totalBudgetINR: parsedBudget,
+      peopleCount: parsedPeople,
+      daysCount: parsedDays,
+    }
+
+    const supportingDemos = [
+      {
+        id: 'demo-udaipur-002',
+        name: 'Chittorgarh Fort & Kumbhalgarh Trail',
+        country: 'India', region: 'Rajasthan',
+        tag: 'HERITAGE', rating: 4.8, reviews: '1.1k',
+        description: 'Explore India\'s largest fort complex and walk the second-longest wall in the world, guided by expert historians at dawn.',
+        activities: ['Heritage Walks', 'Photography'],
+        duration: `${parsedDays} Days / ${parsedDays - 1} Nights`,
+        safetyScore: '9.8 / 10', bestSeason: 'Oct - Feb',
+        highlights: ['Vijay Stambha Sunrise', 'Kumbhalgarh Wall Hike', 'Rana Kumbha Palace', 'Light & Sound Show'],
+        imageQuery: 'rajasthan',
+        img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=900&h=1100&q=85&auto=format&fit=crop',
+        priceINR: perPerson + 2000, priceInINR: perPerson + 2000,
+        priceUSD: Math.round((perPerson + 2000) / 85), priceInUSD: Math.round((perPerson + 2000) / 85),
+        priceDisplayINR: `₹${(perPerson + 2000).toLocaleString('en-IN')}`,
+        priceDisplayUSD: `$${Math.round((perPerson + 2000) / 85)}`,
+        isIndia: true, isAiGenerated: true,
+        totalBudgetINR: parsedBudget, peopleCount: parsedPeople, daysCount: parsedDays,
+      },
+      {
+        id: 'demo-udaipur-003',
+        name: 'Jaisalmer Desert & Golden Dunes Camp',
+        country: 'India', region: 'Rajasthan',
+        tag: 'ADVENTURE', rating: 4.9, reviews: '2.4k',
+        description: 'Sleep under a billion stars in a luxury desert camp, ride camels at golden hour, and watch folk musicians perform by firelight in the Thar Desert.',
+        activities: ['Camel Safari', 'Cultural Shows', 'Stargazing'],
+        duration: `${parsedDays} Days / ${parsedDays - 1} Nights`,
+        safetyScore: '9.7 / 10', bestSeason: 'Nov - Feb',
+        highlights: ['Sam Sand Dunes Camel Trek', 'Jaisalmer Fort Sunrise', 'Luxury Desert Camp Night', 'Folk Music & Fire Show'],
+        imageQuery: 'jaisalmer',
+        img: 'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=900&h=1100&q=85&auto=format&fit=crop',
+        priceINR: perPerson + 4000, priceInINR: perPerson + 4000,
+        priceUSD: Math.round((perPerson + 4000) / 85), priceInUSD: Math.round((perPerson + 4000) / 85),
+        priceDisplayINR: `₹${(perPerson + 4000).toLocaleString('en-IN')}`,
+        priceDisplayUSD: `$${Math.round((perPerson + 4000) / 85)}`,
+        isIndia: true, isAiGenerated: true,
+        totalBudgetINR: parsedBudget, peopleCount: parsedPeople, daysCount: parsedDays,
+      },
+    ]
+
+    const allDemoDestinations = [udaipurDemo, ...supportingDemos]
+
+    setAiSpotlight(udaipurDemo)
+    setAiSearchTag(currentPrompt)
+    setDestList((prev) => [
+      ...allDemoDestinations,
+      ...prev.filter((p) => !allDemoDestinations.some((n) => n.id === p.id)),
+    ])
+
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: `✨ I've curated a royal ${parsedDays}-day Rajasthan escape for ${parsedPeople} travelers within your ₹${parsedBudget.toLocaleString('en-IN')} budget (~₹${perPerson.toLocaleString('en-IN')}/person). Udaipur — the City of Lakes — is your perfect match. Your bespoke spotlight itinerary is ready below!`,
+      },
+    ])
+
+    setShowAllJourneys(true)
+    setIsGeneratingAI(false)
+
+    setTimeout(() => {
+      document.querySelector('.ai-spotlight-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
   }
 
   // ── Filter & Search Logic ──
