@@ -370,15 +370,126 @@
   margin-top: 2px;
 }
 
-.widget-center-figure {
-  width: 52px;
-  height: 52px;
-  border-radius: 8px;
-  background: #2D4A58;
+/* ── Creative Travel Planner CTA Center Button ── */
+.widget-center-cta-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #1A212E 0%, #2D4A58 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #FFFFFF;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(26, 33, 46, 0.25), 0 0 12px rgba(245, 158, 11, 0.15);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.widget-center-cta-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.widget-center-cta-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(26, 33, 46, 0.35), 0 0 20px rgba(245, 158, 11, 0.35);
+  border-color: #F59E0B;
+  background: linear-gradient(135deg, #232C3D 0%, #365868 100%);
+}
+
+.widget-center-cta-btn:hover::before {
+  opacity: 1;
+}
+
+.widget-center-cta-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.cta-icon-spin {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(45, 74, 88, 0.25);
+  transition: transform 0.6s ease;
+}
+
+.widget-center-cta-btn:hover .cta-icon-spin {
+  transform: rotate(180deg) scale(1.15);
+}
+
+.cta-btn-text {
+  font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #F59E0B;
+  text-transform: uppercase;
+}
+
+.cta-arrow {
+  font-size: 15px;
+  color: #FFFFFF;
+  transition: transform 0.3s ease;
+}
+
+.widget-center-cta-btn:hover .cta-arrow {
+  transform: translateX(4px);
+  color: #F59E0B;
+}
+
+/* ── Hero Banner Creative CTA Button ── */
+.db-hero-planner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px 28px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #18181B 0%, #27272A 100%);
+  border: 1px solid rgba(212, 168, 67, 0.4);
+  color: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  width: fit-content;
+  box-shadow: 0 4px 16px rgba(24, 24, 27, 0.2), 0 0 10px rgba(212, 168, 67, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.db-hero-planner-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #27272A 0%, #3F3F46 100%);
+  border-color: #D4A843;
+  box-shadow: 0 8px 24px rgba(24, 24, 27, 0.3), 0 0 18px rgba(212, 168, 67, 0.3);
+}
+
+.db-hero-planner-btn svg {
+  color: #D4A843;
+  transition: transform 0.4s ease;
+}
+
+.db-hero-planner-btn:hover svg {
+  transform: rotate(72deg) scale(1.1);
+}
+
+.hero-btn-arrow {
+  font-size: 16px;
+  color: #D4A843;
+  transition: transform 0.3s ease;
+}
+
+.db-hero-planner-btn:hover .hero-btn-arrow {
+  transform: translateX(4px);
 }
 
 .widget-trip-item {

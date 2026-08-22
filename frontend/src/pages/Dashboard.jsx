@@ -116,6 +116,13 @@ export default function Dashboard() {
                   <span>LIVE MORE</span>
                 </h1>
                 <p className="db-hero-cursive">The world is waiting for you</p>
+                <button className="db-hero-planner-btn" onClick={() => navigate('/destinations')}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span>Start Travel Planner</span>
+                  <span className="hero-btn-arrow">→</span>
+                </button>
               </div>
 
               {/* Collect Moments Badge */}
@@ -157,16 +164,21 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Center Traveler Icon Box */}
-            <div className="widget-center-figure">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="5" r="3" />
-                <path d="M12 8v8" />
-                <path d="M8 11h8" />
-                <path d="M9 16l-2 5" />
-                <path d="M15 16l2 5" />
-              </svg>
-            </div>
+            {/* Center Creative Travel Planner Button */}
+            <button
+              className="widget-center-cta-btn"
+              onClick={() => navigate('/destinations')}
+              title="Start Travel Planner"
+            >
+              <div className="cta-icon-spin">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                </svg>
+              </div>
+              <span className="cta-btn-text">START PLANNER</span>
+              <span className="cta-arrow">→</span>
+            </button>
 
             <div className="widget-trip-item">
               <div>
