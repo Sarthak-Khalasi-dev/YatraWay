@@ -6,7 +6,7 @@ import api from '../services/api'
 import { fetchTrips, createTrip, updateTrip, deleteTrip } from '../store/slices/tripSlice'
 import { useToast } from '../context/ToastContext'
 import { usePageTitle } from '../hooks/usePageTitle'
-import { CalendarIcon, UsersIcon, MapPinIcon, PlaneIcon, SparkleIcon, TrashIcon, UtensilsIcon, HotelIcon, CompassIcon, CheckCircleIcon, FlameIcon } from '../components/icons/LuxuryIcons'
+import { CalendarIcon, UsersIcon, MapPinIcon, PlaneIcon, SparkleIcon, TrashIcon, UtensilsIcon, HotelIcon, CompassIcon, CheckCircleIcon, FlameIcon, BookIcon, ShareIcon, CultureIcon, MountainIcon } from '../components/icons/LuxuryIcons'
 import './Trips.css'
 
 // Initial Curated Multi-City Journeys
@@ -515,8 +515,9 @@ export default function Trips() {
                               setSelectedItineraryTrip(journey)
                               setMenuOpenId(null)
                             }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                           >
-                            📖 Open Itinerary Builder
+                            <BookIcon size={13} color="#D4A843" /> Open Itinerary Builder
                           </button>
                           <button
                             onClick={() => {
@@ -524,8 +525,9 @@ export default function Trips() {
                               setShowShareModal(true)
                               setMenuOpenId(null)
                             }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                           >
-                            🔗 Share Public Link
+                            <ShareIcon size={13} color="#D4A843" /> Share Public Link
                           </button>
                           <button
                             className="text-danger"
@@ -701,9 +703,9 @@ export default function Trips() {
                   className={`itin-tab-item ${activeItineraryTab === tab ? 'active' : ''}`}
                   onClick={() => setActiveItineraryTab(tab)}
                 >
-                  {tab === 'Daily Schedule' && '📋 Day-Wise Itinerary'}
-                  {tab === 'Calendar & Timeline' && '🗓️ Calendar & Timeline'}
-                  {tab === 'Automatic Budget Breakdown' && '💰 Automatic Budget Breakdown'}
+                  {tab === 'Daily Schedule' && 'Day-Wise Itinerary'}
+                  {tab === 'Calendar & Timeline' && 'Calendar & Timeline'}
+                  {tab === 'Automatic Budget Breakdown' && 'Automatic Budget Breakdown'}
                 </button>
               ))}
             </div>
@@ -734,8 +736,8 @@ export default function Trips() {
                         <div className="day-title-row">
                           <div>
                             <h4 className="day-headline">{day.theme || `Day ${dayIdx + 1} Exploration`}</h4>
-                            <p className="day-sub-location">
-                              📍 {day.city} • {day.date || `Day ${dayIdx + 1}`}
+                            <p className="day-sub-location" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <MapPinIcon size={12} color="#D4A843" /> {day.city} • {day.date || `Day ${dayIdx + 1}`}
                             </p>
                           </div>
 
@@ -754,8 +756,8 @@ export default function Trips() {
                         <div className="day-events-list">
                           {(day.activities || []).map((act, actIdx) => (
                             <div key={actIdx} className="day-event-item">
-                              <div className="event-icon-box">
-                                {act.category === 'Food' ? '🍽️' : act.category === 'Culture' ? '🏛️' : act.category === 'Adventure' ? '⛵' : '🗼'}
+                              <div className="event-icon-box" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {act.category === 'Food' ? <UtensilsIcon size={15} color="#D4A843" /> : act.category === 'Culture' ? <CultureIcon size={15} color="#D4A843" /> : act.category === 'Adventure' ? <MountainIcon size={15} color="#D4A843" /> : <CompassIcon size={15} color="#D4A843" />}
                               </div>
                               <div className="event-details">
                                 <div className="event-title-line">
@@ -998,7 +1000,9 @@ export default function Trips() {
 
                   <div className="category-progress-item">
                     <div className="cpi-header">
-                      <span>🏨 Hotels & Stays ({Math.round((liveBudgetCalculation.hotelCost / liveBudgetCalculation.totalEst) * 100)}%)</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <HotelIcon size={14} color="#D4A843" /> Hotels & Stays ({Math.round((liveBudgetCalculation.hotelCost / liveBudgetCalculation.totalEst) * 100)}%)
+                      </span>
                       <span className="cpi-val">₹{liveBudgetCalculation.hotelCost.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="cpi-bar-bg">
@@ -1008,7 +1012,9 @@ export default function Trips() {
 
                   <div className="category-progress-item">
                     <div className="cpi-header">
-                      <span>✈️ Inter-City Transport & Flights ({Math.round((liveBudgetCalculation.transportCost / liveBudgetCalculation.totalEst) * 100)}%)</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <PlaneIcon size={14} color="#D4A843" /> Inter-City Transport & Flights ({Math.round((liveBudgetCalculation.transportCost / liveBudgetCalculation.totalEst) * 100)}%)
+                      </span>
                       <span className="cpi-val">₹{liveBudgetCalculation.transportCost.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="cpi-bar-bg">
@@ -1018,7 +1024,9 @@ export default function Trips() {
 
                   <div className="category-progress-item">
                     <div className="cpi-header">
-                      <span>🎯 Activities & Sightseeing ({Math.round((liveBudgetCalculation.activitiesCost / liveBudgetCalculation.totalEst) * 100)}%)</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <CompassIcon size={14} color="#D4A843" /> Activities & Sightseeing ({Math.round((liveBudgetCalculation.activitiesCost / liveBudgetCalculation.totalEst) * 100)}%)
+                      </span>
                       <span className="cpi-val">₹{liveBudgetCalculation.activitiesCost.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="cpi-bar-bg">
@@ -1028,7 +1036,9 @@ export default function Trips() {
 
                   <div className="category-progress-item">
                     <div className="cpi-header">
-                      <span>🍽️ Meals & Dining ({Math.round((liveBudgetCalculation.foodCost / liveBudgetCalculation.totalEst) * 100)}%)</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <UtensilsIcon size={14} color="#D4A843" /> Meals & Dining ({Math.round((liveBudgetCalculation.foodCost / liveBudgetCalculation.totalEst) * 100)}%)
+                      </span>
                       <span className="cpi-val">₹{liveBudgetCalculation.foodCost.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="cpi-bar-bg">
@@ -1049,7 +1059,9 @@ export default function Trips() {
             <div className="custom-modal-window wide" onClick={(e) => e.stopPropagation()}>
               <div className="cm-header">
                 <div>
-                  <span className="cm-badge-ai">🤖 AI SMART TRIP OPTIMIZER</span>
+                  <span className="cm-badge-ai" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <SparkleIcon size={12} color="#D4A843" /> AI SMART TRIP OPTIMIZER
+                  </span>
                   <h3 className="cm-title">Optimize Multi-City Itinerary & Budget</h3>
                 </div>
                 <button className="cm-close" onClick={() => setShowAIOptimizerModal(false)}>✕</button>
@@ -1447,7 +1459,9 @@ export default function Trips() {
                 <div className="log-cards-stack">
                   <div className="log-detail-card">
                     <div className="log-card-row1">
-                      <div className="log-badge-icon dark">✈️</div>
+                      <div className="log-badge-icon dark" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <PlaneIcon size={18} color="#FFFFFF" />
+                      </div>
                       <div>
                         <span className="log-card-type">INTER-CITY FLIGHT</span>
                         <h4 className="log-card-name">Flight MH-842</h4>
@@ -1461,13 +1475,15 @@ export default function Trips() {
 
                   <div className="log-detail-card">
                     <div className="log-card-row1">
-                      <div className="log-badge-icon beige">🏨</div>
+                      <div className="log-badge-icon beige" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <HotelIcon size={18} color="#D4A843" />
+                      </div>
                       <div>
                         <span className="log-card-type">PRIMARY RESIDENCE</span>
                         <h4 className="log-card-name">Luxury Boutique Stay</h4>
                       </div>
                       <div className="log-card-meta-right">
-                        <span className="meta-luxury">★ 5-STAR VERIFIED</span>
+                        <span className="meta-luxury">5-STAR VERIFIED</span>
                       </div>
                     </div>
                   </div>
@@ -1476,7 +1492,7 @@ export default function Trips() {
                 <div className="log-actions-column">
                   <button
                     className="log-btn-primary"
-                    onClick={() => toast.success('📥 Digital Itinerary Vouchers saved!')}
+                    onClick={() => toast.success('Digital Itinerary Vouchers saved!')}
                   >
                     Download Digital Vouchers →
                   </button>
