@@ -1,337 +1,792 @@
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import { fetchTrips, createTrip, updateTrip, deleteTrip } from '../store/slices/tripSlice'
 import { useToast } from '../context/ToastContext'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './Trips.css'
 
-const TABS = ['All', 'Upcoming', 'Ongoing', 'Completed', 'Wishlist']
-
-const STATUS_STYLE = {
-  'Upcoming':  { bg: 'rgba(212,168,67,0.12)',  color: '#B8860B',  dot: '#D4A843' },
-  'Ongoing':   { bg: 'rgba(16,185,129,0.12)',  color: '#059669',  dot: '#10B981' },
-  'Completed': { bg: 'rgba(99,102,241,0.12)',  color: '#5B5BD6',  dot: '#6366F1' },
-  'Wishlist':  { bg: 'rgba(239,68,68,0.12)',   color: '#DC2626',  dot: '#EF4444' },
-}
-
-const IMG_SEEDS = ['bali','santorini','kyoto','goa','maldives','paris','tokyo','barca','dubai','swiss']
-const BLANK_FORM = {
-  dest: '', dates: '', days: '', status: 'Upcoming', budget: '',
-  spent: '₹0', members: 2, progress: 0, notes: '',
-  img: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=400&q=80&auto=format&fit=crop', activities: '',
-}
-
-function Modal({ title, onClose, children }) {
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <div className="modal-hdr">
-          <h3 className="modal-title">{title}</h3>
-          <button className="modal-close" onClick={onClose}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function TripForm({ initial, onSave, onClose, initialData }) {
-  const [form, setForm] = useState(initial || { ...BLANK_FORM, ...initialData })
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    const trip = {
-      ...form,
-      days: parseInt(form.days) || 1,
-      members: parseInt(form.members) || 1,
-      progress: parseInt(form.progress) || 0,
-      activities: typeof form.activities === 'string'
-        ? form.activities.split(',').map(a => a.trim()).filter(Boolean)
-        : form.activities,
-      img: form.img || `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80&auto=format&fit=crop`,
-    }
-    onSave(trip)
-    onClose()
-  }
-
-  return (
-    <form className="trip-form" onSubmit={handleSubmit}>
-      <div className="tf-grid">
-        <div className="tf-field">
-          <label>Destination *</label>
-          <input required placeholder="e.g. Bali, Indonesia" value={form.dest} onChange={e => set('dest', e.target.value)} />
-        </div>
-        <div className="tf-field">
-          <label>Status</label>
-          <select value={form.status} onChange={e => set('status', e.target.value)}>
-            {['Upcoming','Ongoing','Completed','Wishlist'].map(s => <option key={s}>{s}</option>)}
-          </select>
-        </div>
-        <div className="tf-field">
-          <label>Dates</label>
-          <input placeholder="e.g. 20 May — 02 Jun 2024" value={form.dates} onChange={e => set('dates', e.target.value)} />
-        </div>
-        <div className="tf-field">
-          <label>Duration (days)</label>
-          <input type="number" min="1" placeholder="7" value={form.days} onChange={e => set('days', e.target.value)} />
-        </div>
-        <div className="tf-field">
-          <label>Budget</label>
-          <input placeholder="₹50,000" value={form.budget} onChange={e => set('budget', e.target.value)} />
-        </div>
-        <div className="tf-field">
-          <label>Spent</label>
-          <input placeholder="₹0" value={form.spent} onChange={e => set('spent', e.target.value)} />
-        </div>
-        <div className="tf-field">
-          <label>Members</label>
-          <input type="number" min="1" placeholder="2" value={form.members} onChange={e => set('members', e.target.value)} />
-        </div>
-        <div className="tf-field">
-          <label>Progress (%)</label>
-          <input type="number" min="0" max="100" placeholder="0" value={form.progress} onChange={e => set('progress', e.target.value)} />
-        </div>
-        <div className="tf-field tf-full">
-          <label>Activities (comma-separated)</label>
-          <input placeholder="Surfing, Temple Tour, Rice Terraces"
-            value={Array.isArray(form.activities) ? form.activities.join(', ') : form.activities}
-            onChange={e => set('activities', e.target.value)} />
-        </div>
-        <div className="tf-field tf-full">
-          <label>Notes</label>
-          <textarea rows="2" placeholder="Any notes for this trip..." value={form.notes} onChange={e => set('notes', e.target.value)} />
-        </div>
-      </div>
-      <div className="tf-actions">
-        <button type="button" className="tf-btn-cancel" onClick={onClose}>Cancel</button>
-        <button type="submit" className="tf-btn-save">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-          Save Trip
-        </button>
-      </div>
-    </form>
-  )
-}
+const DEFAULT_INITIAL_JOURNEYS = [
+  {
+    _id: 'journey-agra-1',
+    dest: 'Agra, India',
+    statusTag: 'IN PROGRESS',
+    dates: 'Oct 12 — Oct 20',
+    days: 8,
+    stops: '4 Stops',
+    progress: 75,
+    status: 'Upcoming',
+    img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&h=500&q=85&auto=format&fit=crop',
+    subtitle: 'Golden Triangle & Mughal Heritage Odyssey',
+    desc: 'Witness the sunrise over the Taj Mahal, explore the red sandstone courts of Agra Fort, and wander through ancient marble artisan workshops.',
+  },
+  {
+    _id: 'journey-cinqueterre-2',
+    dest: 'Cinque Terre, Italy',
+    statusTag: 'DREAMING',
+    dates: 'Dec 01 — Dec 10',
+    days: 10,
+    stops: '5 Villages',
+    progress: 20,
+    status: 'Upcoming',
+    img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=800&h=500&q=85&auto=format&fit=crop',
+    subtitle: 'Italian Riviera Coastal Cliff Trail',
+    desc: 'Hike the iconic Sentiero Azzurro clifftop paths connecting Riomaggiore, Manarola, Corniglia, Vernazza, and Monterosso al Mare.',
+  },
+]
 
 export default function Trips() {
   const location = useLocation()
-  const [mounted, setMounted] = useState(false)
-  const [tab, setTab] = useState('All')
-  const [view, setView] = useState('grid')
-  const [showAdd, setShowAdd] = useState(false)
-  const [editTrip, setEditTrip] = useState(null)
-  const [deleteId, setDeleteId] = useState(null)
-  const [initialTripData, setInitialTripData] = useState(null)
-  
+  const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { trips, loading } = useSelector((state) => state.trips)
   const toast = useToast()
-  usePageTitle('My Trips')
+
+  usePageTitle('My Journeys — Wanderlust')
+
+  const [filterTab, setFilterTab] = useState('Upcoming') // 'Upcoming' | 'Past'
+  const [journeys, setJourneys] = useState(DEFAULT_INITIAL_JOURNEYS)
+  const [selectedItineraryTrip, setSelectedItineraryTrip] = useState(null)
+  const [showLogisticsModal, setShowLogisticsModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [menuOpenId, setMenuOpenId] = useState(null)
+
+  // Form states for new trip
+  const [newDest, setNewDest] = useState('')
+  const [newDates, setNewDates] = useState('')
+  const [newDays, setNewDays] = useState(7)
+  const [newStops, setNewStops] = useState('3 Stops')
+  const [newStatusTag, setNewStatusTag] = useState('DREAMING')
+  const [newImg, setNewImg] = useState('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80&auto=format&fit=crop')
+  const [inviteEmail, setInviteEmail] = useState('')
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 40)
     dispatch(fetchTrips())
-
     if (location.state?.initialDest) {
-      setInitialTripData({
+      const added = {
+        _id: `journey-${Date.now()}`,
         dest: location.state.initialDest,
-        img: location.state.initialImg,
-      })
-      setShowAdd(true)
-      // Clear state after reading to prevent re-opening on refresh
+        statusTag: 'PLANNING',
+        dates: 'Next Season',
+        days: 7,
+        stops: '3 Locations',
+        progress: 10,
+        status: 'Upcoming',
+        img: location.state.initialImg || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80&auto=format&fit=crop',
+        subtitle: 'Curated Custom Escape',
+        desc: `Bespoke travel plan created for ${location.state.initialDest}.`,
+      }
+      setJourneys((prev) => [added, ...prev])
+      toast.success(`✨ Added ${location.state.initialDest} to My Journeys!`)
       window.history.replaceState({}, document.title)
     }
-
-    return () => clearTimeout(t)
   }, [dispatch, location.state])
 
-  const handleAdd = async (trip) => {
-    const result = await dispatch(createTrip(trip))
-    if (createTrip.fulfilled.match(result)) {
-      toast.success(`✈️ Trip to ${trip.dest} added!`)
-    }
-  }
+  const handleCreateItinerary = (e) => {
+    e.preventDefault()
+    if (!newDest.trim()) return
 
-  const handleEdit = async (trip) => {
-    const result = await dispatch(updateTrip({ id: trip._id, tripData: trip }))
-    if (updateTrip.fulfilled.match(result)) {
-      toast.success('✏️ Trip updated successfully')
-    }
-  }
-
-  const handleDeleteConfirmed = async (id) => {
-    const result = await dispatch(deleteTrip(id))
-    if (deleteTrip.fulfilled.match(result)) {
-      setDeleteId(null)
-      toast.info('🗑️ Trip removed')
-    }
-  }
-
-  const displayTrips = trips.length > 0 ? trips : [
-    {
-      _id: 'trip_demo_1',
-      dest: 'Bali, Indonesia',
+    const newTripObj = {
+      _id: `journey-${Date.now()}`,
+      dest: newDest.trim(),
+      statusTag: newStatusTag,
+      dates: newDates || 'Nov 15 — Nov 22',
+      days: parseInt(newDays) || 7,
+      stops: newStops || '3 Stops',
+      progress: 25,
       status: 'Upcoming',
-      dates: '20 May — 02 Jun 2024',
-      days: 12,
-      progress: 80,
-      budget: '₹55,000',
-      spent: '₹38,500',
-      members: 2,
-      img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&q=80&auto=format&fit=crop',
-      activities: ['Ubud Villa Stay', 'Sacred Monkey Forest', 'Seminyak Beach Club'],
-      notes: 'Private airport driver booked with Komaneka resort.',
-    },
-    {
-      _id: 'trip_demo_2',
-      dest: 'Swiss Alps Expedition',
-      status: 'Upcoming',
-      dates: '05 Jul — 15 Jul 2024',
-      days: 10,
-      progress: 30,
-      budget: '₹1,50,000',
-      spent: '₹45,000',
-      members: 2,
-      img: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=600&h=400&q=80&auto=format&fit=crop',
-      activities: ['Matterhorn Hike', 'Glacier Express', 'Alpine Fondue'],
-      notes: 'Ensure thermal jackets are packed.',
-    },
-    {
-      _id: 'trip_demo_3',
-      dest: 'Ladakh High-Pass Trek',
-      status: 'Wishlist',
-      dates: '10 Aug — 20 Aug 2024',
-      days: 8,
-      progress: 15,
-      budget: '₹45,000',
-      spent: '₹0',
-      members: 3,
-      img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&h=400&q=80&auto=format&fit=crop',
-      activities: ['Pangong Tso Stargazing', 'Khardung La Pass', 'Thiksey Monastery'],
-      notes: 'Acclimatization day in Leh is mandatory.',
-    },
-    {
-      _id: 'trip_demo_4',
-      dest: 'Kerala Backwaters & Tea Gardens',
-      status: 'Completed',
-      dates: '12 Jan — 18 Jan 2024',
-      days: 7,
-      progress: 100,
-      budget: '₹38,000',
-      spent: '₹36,200',
-      members: 2,
-      img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&h=400&q=80&auto=format&fit=crop',
-      activities: ['Alleppey Houseboat', 'Munnar Tea Estate', 'Kathakali Show'],
-      notes: 'Incredible Ayurvedic massages and seafood.',
-    },
-  ]
+      img: newImg,
+      subtitle: 'Custom Crafted Journey',
+      desc: `Explore the vibrant wonders and secret treasures of ${newDest.trim()}.`,
+    }
 
-  const filtered = displayTrips.filter(t => tab === 'All' || t.status === tab)
+    setJourneys((prev) => [...prev, newTripObj])
+    setShowCreateModal(false)
+    setNewDest('')
+    setNewDates('')
+    toast.success(`✈️ Itinerary for ${newTripObj.dest} created!`)
+  }
 
-  const SUMMARY = [
-    { label: 'Total Trips',   value: displayTrips.length,                                     icon: '✈️' },
-    { label: 'Upcoming',      value: displayTrips.filter(t=>t.status==='Upcoming').length,     icon: '🗓️' },
-    { label: 'Completed',     value: displayTrips.filter(t=>t.status==='Completed').length,    icon: '✅' },
-    { label: 'Wishlist',      value: displayTrips.filter(t=>t.status==='Wishlist').length,     icon: '❤️' },
-  ]
+  const handleDeleteJourney = (id) => {
+    setJourneys((prev) => prev.filter((j) => j._id !== id))
+    setMenuOpenId(null)
+    toast.info('🗑️ Journey removed from your itineraries.')
+  }
+
+  const handleInviteCrew = (e) => {
+    e.preventDefault()
+    if (inviteEmail) {
+      toast.success(`✉️ Invitation sent to ${inviteEmail}!`)
+      setInviteEmail('')
+    }
+  }
+
+  const handleShareItinerary = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href)
+      toast.success('🔗 Shareable itinerary link copied to clipboard!')
+    } else {
+      toast.success('🔗 Itinerary ready to share!')
+    }
+  }
+
+  const activeJourneysList = journeys.filter((j) =>
+    filterTab === 'Upcoming' ? j.status !== 'Past' : j.status === 'Past'
+  )
 
   return (
-    <div className={`pg-root ${mounted ? 'pg-on' : ''}`}>
+    <div className="trips-page-root">
       <Sidebar />
-      <div className="pg-main">
-        <header className="pg-header">
-          <div><h1 className="pg-title">My Trips</h1><p className="pg-sub">All your journeys — past, present, and future</p></div>
-          <div className="trips-header-r">
-            <div className="view-toggle">
-              {['grid','list'].map(v => (
-                <button key={v} className={`view-btn ${view===v?'view-btn--on':''}`} onClick={() => setView(v)}>
-                  {v === 'grid'
-                    ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                    : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                  }
+
+      <main className="trips-main-content">
+        {/* ═════════════════════════════════════════════════════════════
+            VIEW MODE A: MY JOURNEYS GRID (Matching Image 3)
+        ═════════════════════════════════════════════════════════════ */}
+        {!selectedItineraryTrip ? (
+          <div className="trips-scroll-container">
+            {/* Top Page Header */}
+            <header className="journeys-top-header">
+              <div className="journeys-title-group">
+                <h1 className="journeys-hero-title">My Journeys</h1>
+                <p className="journeys-hero-sub">
+                  Manage your upcoming adventures and relive past memories across the globe with sophisticated ease.
+                </p>
+              </div>
+
+              {/* Segmented Switcher (Upcoming / Past) */}
+              <div className="journeys-tab-switcher">
+                <button
+                  className={`switcher-tab ${filterTab === 'Upcoming' ? 'active' : ''}`}
+                  onClick={() => setFilterTab('Upcoming')}
+                >
+                  Upcoming
                 </button>
-              ))}
-            </div>
-            <button className="new-trip-btn" onClick={() => setShowAdd(true)}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Trip</button>
-          </div>
-        </header>
+                <button
+                  className={`switcher-tab ${filterTab === 'Past' ? 'active' : ''}`}
+                  onClick={() => setFilterTab('Past')}
+                >
+                  Past
+                </button>
+              </div>
+            </header>
 
-        <div className="pg-scroll" style={{ padding: '0 24px 32px' }}>
-          <div className="trip-summary" style={{ paddingTop: 20 }}>
-            {SUMMARY.map((s, i) => (
-              <div className="sum-card" key={s.label} style={{ animationDelay: `${i*0.06}s` }}><span className="sum-icon">{s.icon}</span><p className="sum-val">{s.value}</p><p className="sum-lbl">{s.label}</p></div>
-            ))}
-          </div>
+            {/* Journeys 2-Column Grid */}
+            <div className="journeys-editorial-grid">
+              {activeJourneysList.map((journey) => (
+                <div key={journey._id} className="journey-card-editorial">
+                  <div className="jc-image-container">
+                    <img src={journey.img} alt={journey.dest} className="jc-cover-img" />
+                    
+                    {/* Status Badge */}
+                    <div className="jc-status-badge">
+                      <span className="status-dot" />
+                      <span>{journey.statusTag || 'IN PROGRESS'}</span>
+                    </div>
 
-          <div className="trip-tabs">
-            {TABS.map(t => (
-              <button key={t} className={`trip-tab ${tab===t?'trip-tab--on':''}`} onClick={() => setTab(t)}>{t}<span className="trip-tab-count">{t==='All' ? displayTrips.length : displayTrips.filter(x=>x.status===t).length}</span></button>
-            ))}
-          </div>
+                    {/* Three Dots Menu */}
+                    <div className="jc-menu-wrapper">
+                      <button
+                        className="jc-dots-btn"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setMenuOpenId(menuOpenId === journey._id ? null : journey._id)
+                        }}
+                      >
+                        ⋮
+                      </button>
 
-          {loading ? (
-            <div style={{ textAlign:'center', padding:'100px 0' }}><span className="spinner" /></div>
-          ) : view === 'grid' ? (
-            <div className="trips-grid">
-              {filtered.map((trip, i) => {
-                const s = STATUS_STYLE[trip.status] || STATUS_STYLE['Upcoming']
-                return (
-                  <div className="trip-card" key={trip._id} style={{ animationDelay: `${i*0.07}s` }}>
-                    <div className="trip-img-wrap">
-                      <img src={trip.img || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80&auto=format&fit=crop'} alt={trip.dest} className="trip-img" />
-                      <div className="trip-status-badge" style={{ background: s.bg, color: s.color }}><span className="trip-dot" style={{ background: s.dot }} />{trip.status}</div>
-                      <div className="trip-card-actions">
-                        <button className="tc-action-btn tc-edit" title="Edit" onClick={() => setEditTrip(trip)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                        <button className="tc-action-btn tc-delete" title="Delete" onClick={() => setDeleteId(trip._id)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+                      {menuOpenId === journey._id && (
+                        <div className="jc-dropdown-menu" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => {
+                              setSelectedItineraryTrip(journey)
+                              setMenuOpenId(null)
+                            }}
+                          >
+                            📖 Open Itinerary
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowLogisticsModal(true)
+                              setMenuOpenId(null)
+                            }}
+                          >
+                            ✈️ Travel Logistics
+                          </button>
+                          <button
+                            className="text-danger"
+                            onClick={() => handleDeleteJourney(journey._id)}
+                          >
+                            🗑️ Delete Journey
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="jc-content-body">
+                    <div className="jc-title-row">
+                      <h3 className="jc-dest-title">{journey.dest}</h3>
+                      <p className="jc-dates-lbl">{journey.dates}</p>
+                    </div>
+
+                    {/* Planning Progress Bar */}
+                    <div className="jc-progress-box">
+                      <div className="progress-lbl-row">
+                        <span className="prog-title">Planning Progress</span>
+                        <span className="prog-value">{journey.progress}%</span>
+                      </div>
+                      <div className="prog-track">
+                        <div className="prog-fill" style={{ width: `${journey.progress}%` }} />
                       </div>
                     </div>
-                    <div className="trip-body">
-                      <p className="trip-dest">{trip.dest}</p><p className="trip-dates"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{trip.dates} {trip.days ? `· ${trip.days} days` : ''}</p>
-                      {trip.activities?.length > 0 && <div className="trip-activities">{trip.activities.slice(0,3).map(a => <span key={a} className="act-chip">{a}</span>)}</div>}
-                      <div className="trip-budget-row"><div><p className="trip-budget-lbl">Budget</p><p className="trip-budget-val">{trip.budget || '—'}</p></div><div><p className="trip-budget-lbl">Spent</p><p className="trip-budget-val">{trip.spent || '₹0'}</p></div><div><p className="trip-budget-lbl">Members</p><p className="trip-budget-val">👥 {trip.members || 1}</p></div></div>
-                      <div className="trip-progress-wrap"><div className="trip-progress-bar"><div className="trip-progress-fill" style={{ width: `${trip.progress}%` }} /></div><span className="trip-progress-pct">{trip.progress}%</span></div>
-                      {trip.notes && <p style={{ fontSize:12, color:'var(--text-3)', marginTop:8 }}>📝 {trip.notes}</p>}
+
+                    {/* Bottom Meta & Action */}
+                    <div className="jc-footer-row">
+                      <div className="jc-meta-items">
+                        <span className="meta-pill">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                          </svg>
+                          {journey.days} Days
+                        </span>
+
+                        <span className="meta-pill">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                          {journey.stops || '4 Stops'}
+                        </span>
+                      </div>
+
+                      <button
+                        className="jc-view-plan-btn"
+                        onClick={() => setSelectedItineraryTrip(journey)}
+                      >
+                        <span>View Plan</span>
+                        <span>→</span>
+                      </button>
                     </div>
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="trips-list-view">
-              {filtered.map((trip, i) => {
-                const s = STATUS_STYLE[trip.status] || STATUS_STYLE['Upcoming']
-                return (
-                  <div className="trip-list-row" key={trip._id} style={{ animationDelay: `${i*0.05}s` }}>
-                    <img src={trip.img || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&q=80&auto=format&fit=crop'} alt={trip.dest} className="trip-list-img" />
-                    <div className="trip-list-info"><p className="trip-dest">{trip.dest}</p><p className="trip-dates" style={{ marginTop: 3 }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{trip.dates} {trip.days ? `· ${trip.days} days` : ''}</p></div>
-                    <div className="trip-list-meta"><span className="trip-status-badge" style={{ background: s.bg, color: s.color }}><span className="trip-dot" style={{ background: s.dot }} />{trip.status}</span><p className="trip-budget-val" style={{ marginTop: 6, textAlign:'right' }}>{trip.budget || '—'}</p></div>
-                    <div className="trip-list-bar"><div className="trip-progress-bar" style={{ width: 100 }}><div className="trip-progress-fill" style={{ width: `${trip.progress}%` }} /></div><span className="trip-progress-pct">{trip.progress}%</span></div>
-                    <div style={{ display:'flex', gap:6 }}>
-                      <button className="tc-action-btn tc-edit" title="Edit" onClick={() => setEditTrip(trip)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                      <button className="tc-action-btn tc-delete" title="Delete" onClick={() => setDeleteId(trip._id)}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+
+            {/* Create New Itinerary Big Dashed Card */}
+            <div className="create-itinerary-dashed-box" onClick={() => setShowCreateModal(true)}>
+              <div className="create-plus-icon-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#18181B" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </div>
+              <h3 className="create-box-title">Create New Itinerary</h3>
+              <p className="create-box-sub">Start planning your next unforgettable escape.</p>
+            </div>
+          </div>
+        ) : (
+          /* ═════════════════════════════════════════════════════════════
+              VIEW MODE B: FULL ITINERARY VIEW (Matching Image 2)
+          ═════════════════════════════════════════════════════════════ */
+          <div className="itinerary-scroll-container">
+            {/* Back Navigation */}
+            <div className="itin-back-nav">
+              <button className="itin-back-btn" onClick={() => setSelectedItineraryTrip(null)}>
+                ← Back to My Journeys
+              </button>
+            </div>
+
+            {/* 1. Hero Panorama with Frosted Glass Card */}
+            <div className="itin-hero-panorama">
+              <img
+                src={selectedItineraryTrip.img || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&h=700&q=85&auto=format&fit=crop'}
+                alt="Itinerary Cover"
+                className="itin-hero-img"
+              />
+              <div className="itin-hero-overlay" />
+
+              {/* Frosted Floating Card on Left */}
+              <div className="itin-glass-card">
+                <div className="glass-badge-row">
+                  <span className="glass-badge-orange">ONGOING TRIP</span>
+                  <span className="glass-days-left">8 Days left</span>
+                </div>
+
+                <h2 className="glass-card-title">
+                  {selectedItineraryTrip.dest === 'Agra, India' ? 'Mughal Heritage of Agra' : 'Island of the Gods'}
+                </h2>
+                <p className="glass-card-desc">
+                  {selectedItineraryTrip.desc || 'Explore the spiritual heart of Bali, from the lush jungles of Ubud to the pristine beaches of Uluwatu.'}
+                </p>
+
+                <div className="glass-actions-row">
+                  <button className="glass-btn-white" onClick={handleShareItinerary}>
+                    <span>Share with Friends</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                  </button>
+
+                  <button className="glass-btn-outline" onClick={() => setShowLogisticsModal(true)}>
+                    <span>View Logistics</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Main Itinerary Body: Daily Timeline + Sidebar Map/Crew */}
+            <div className="itin-body-grid">
+              {/* Left Column: Daily Itinerary Timeline */}
+              <div className="itin-timeline-column">
+                <div className="timeline-header-row">
+                  <h3 className="itin-section-h3">Daily Itinerary</h3>
+                  <div className="timeline-page-arrows">
+                    <button className="t-arrow-btn">‹</button>
+                    <button className="t-arrow-btn">›</button>
+                  </div>
+                </div>
+
+                {/* Day 01 Card */}
+                <div className="day-schedule-card">
+                  <div className="day-number-badge">01</div>
+                  <div className="day-content-area">
+                    <div className="day-title-row">
+                      <div>
+                        <h4 className="day-headline">
+                          {selectedItineraryTrip.dest === 'Agra, India' ? 'Taj Mahal Sunrise & Red Fort Exploration' : 'Ubud Arrival & Temple Visit'}
+                        </h4>
+                        <p className="day-sub-location">Tuesday, Oct 24 • Spiritual Center</p>
+                      </div>
+                      <span className="day-compass-icon">🧭</span>
+                    </div>
+
+                    <div className="day-events-list">
+                      <div className="day-event-item">
+                        <div className="event-icon-box">🍴</div>
+                        <div className="event-details">
+                          <h5 className="event-name">
+                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Royal Mughlai Lunch at Peshawri' : 'Lunch at Ibu Rai'}
+                          </h5>
+                          <p className="event-desc">
+                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Authentic tandoori delicacies and saffron biryani.' : 'Traditional Balinese organic cuisine and tropical herbal teas.'}
+                          </p>
+                        </div>
+                        <span className="event-time">12:30 PM</span>
+                      </div>
+
+                      <div className="day-event-item">
+                        <div className="event-icon-box">🚶</div>
+                        <div className="event-details">
+                          <h5 className="event-name">
+                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Agra Fort Diwan-i-Khas Heritage Walk' : 'Sacred Monkey Forest Sanctuary'}
+                          </h5>
+                          <p className="event-desc">
+                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Private architectural walk through Emperor Shah Jahan’s marble chambers.' : 'Guided walk through ancient jungle temples and sacred banyan trees.'}
+                          </p>
+                        </div>
+                        <span className="event-time">03:00 PM</span>
+                      </div>
                     </div>
                   </div>
-                )
-              })}
+                </div>
+
+                {/* Day 02 Card */}
+                <div className="day-schedule-card">
+                  <div className="day-number-badge">02</div>
+                  <div className="day-content-area">
+                    <div className="day-title-row">
+                      <div>
+                        <h4 className="day-headline">
+                          {selectedItineraryTrip.dest === 'Agra, India' ? 'Fatehpur Sikri & Artisan Marble Inlay' : 'Sunsets & Coastal Cliffs'}
+                        </h4>
+                        <p className="day-sub-location">Wednesday, Oct 25 • Uluwatu Coast</p>
+                      </div>
+                      <span className="day-compass-icon">🏖️</span>
+                    </div>
+
+                    <div className="day-events-list">
+                      <div className="day-event-item">
+                        <div className="event-icon-box">🌊</div>
+                        <div className="event-details">
+                          <h5 className="event-name">
+                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Mehtab Bagh Moonlight River Walk' : 'Padang Padang Beach Surf'}
+                          </h5>
+                          <p className="event-desc">
+                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Sunset view of the Taj Mahal across the calm waters of the Yamuna.' : 'Morning surf session and cliffside relaxation overlooking crystal reef waters.'}
+                          </p>
+                        </div>
+                        <span className="event-time">09:00 AM</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Route Map, Travel Crew & Logistics Box */}
+              <div className="itin-sidebar-column">
+                {/* Route Map Card */}
+                <div className="itin-map-box">
+                  <div className="map-hdr-row">
+                    <span className="map-lbl">ROUTE MAP</span>
+                    <span className="map-count">📍 4 Locations</span>
+                  </div>
+
+                  <div className="map-graphic-viewport">
+                    <svg viewBox="0 0 300 180" className="bali-map-svg">
+                      <path
+                        d="M20,90 Q60,40 130,50 T220,70 T280,110 Q260,150 180,140 T80,130 Z"
+                        fill="#A8A29E"
+                        opacity="0.85"
+                      />
+                      <circle cx="160" cy="95" r="4" fill="#000000" />
+                      <circle cx="160" cy="95" r="10" fill="rgba(0,0,0,0.15)" />
+                      {/* Tooltip Label */}
+                      <g transform="translate(130, 65)">
+                        <rect width="65" height="22" rx="4" fill="#18181B" />
+                        <text x="7" y="15" fill="#FFFFFF" fontSize="9" fontWeight="700">
+                          Ubud Base
+                        </text>
+                      </g>
+                    </svg>
+
+                    <div className="map-zoom-controls">
+                      <button className="zoom-btn">+</button>
+                      <button className="zoom-btn">−</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Travel Crew Obsidian Box */}
+                <div className="itin-crew-card">
+                  <h4 className="crew-title">Travel Crew</h4>
+                  <p className="crew-sub">Manage who can view and edit this itinerary.</p>
+
+                  <div className="crew-members-list">
+                    <div className="crew-member-row">
+                      <img
+                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&q=80&auto=format&fit=crop"
+                        alt="Sarah Jenkins"
+                        className="crew-avatar"
+                      />
+                      <div className="crew-info">
+                        <span className="crew-name">Sarah Jenkins</span>
+                        <span className="crew-role">TRIP OWNER</span>
+                      </div>
+                    </div>
+
+                    <div className="crew-member-row">
+                      <img
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&q=80&auto=format&fit=crop"
+                        alt="Mark Davis"
+                        className="crew-avatar"
+                      />
+                      <div className="crew-info">
+                        <span className="crew-name">Mark Davis</span>
+                        <span className="crew-role">CAN EDIT</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <form className="crew-invite-row" onSubmit={handleInviteCrew}>
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      className="crew-input"
+                    />
+                    <button type="submit" className="crew-invite-btn">
+                      Invite
+                    </button>
+                  </form>
+                </div>
+
+                {/* Trip Logistics Summary Pill Box */}
+                <div className="itin-logistics-summary-box" onClick={() => setShowLogisticsModal(true)}>
+                  <span className="log-hdr-lbl">TRIP LOGISTICS</span>
+
+                  <div className="log-item-line">
+                    <span className="log-icon">✈️</span>
+                    <div>
+                      <p className="log-name">Flight MH-842</p>
+                      <p className="log-sub">Arriving 02:45 PM</p>
+                    </div>
+                  </div>
+
+                  <div className="log-item-line">
+                    <span className="log-icon">🏨</span>
+                    <div>
+                      <p className="log-name">Mandapa Reserve</p>
+                      <p className="log-sub">Check-in at 03:00 PM</p>
+                    </div>
+                  </div>
+
+                  <div className="log-item-line">
+                    <span className="log-icon">🛡️</span>
+                    <div>
+                      <p className="log-name">Travel Insurance</p>
+                      <p className="log-sub">Active • NomadCare</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {filtered.length === 0 && !loading && (
-            <div className="no-results"><span style={{ fontSize: 48 }}>🗺️</span><p>No {tab.toLowerCase()} trips yet</p><button onClick={() => tab === 'All' ? setShowAdd(true) : setTab('All')}>{tab === 'All' ? 'Add your first trip' : 'View all trips'}</button></div>
-          )}
-        </div>
-      </div>
+        {/* ═════════════════════════════════════════════════════════════
+            TRAVEL LOGISTICS MODAL / DRAWER (Matching Image 1)
+        ═════════════════════════════════════════════════════════════ */}
+        {showLogisticsModal && (
+          <div className="logistics-modal-backdrop" onClick={() => setShowLogisticsModal(false)}>
+            <div className="logistics-drawer-window" onClick={(e) => e.stopPropagation()}>
+              {/* Left Photo Showcase */}
+              <div className="log-drawer-left-photo">
+                <img
+                  src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&h=1100&q=85&auto=format&fit=crop"
+                  alt="Bali Stay"
+                  className="log-photo-bg"
+                />
+                <div className="log-photo-gradient" />
+                <div className="log-photo-caption">
+                  <span className="log-days-tag">DAYS TO GO: 12</span>
+                  <h3 className="log-photo-title">Bali Itinerary</h3>
+                  <p className="log-photo-sub">
+                    Your spiritual journey through the heart of Ubud begins with seamless transitions and refined comfort.
+                  </p>
+                </div>
+              </div>
 
-      {showAdd && <Modal title="Plan a New Trip ✈️" onClose={() => setShowAdd(false)}><TripForm onSave={handleAdd} onClose={() => setShowAdd(false)} initialData={initialTripData} /></Modal>}
-      {editTrip && <Modal title="Edit Trip ✏️" onClose={() => setEditTrip(null)}><TripForm initial={{ ...editTrip, activities: editTrip.activities.join(', ') }} onSave={handleEdit} onClose={() => setEditTrip(null)} /></Modal>}
-      {deleteId && (
-        <div className="modal-overlay" onClick={() => setDeleteId(null)}><div className="confirm-box" onClick={e => e.stopPropagation()}><span style={{ fontSize:36 }}>🗑️</span><h3>Delete this trip?</h3><p>This action cannot be undone.</p><div className="confirm-actions"><button className="tf-btn-cancel" onClick={() => setDeleteId(null)}>Keep It</button><button className="tf-btn-danger" onClick={() => handleDeleteConfirmed(deleteId)}>Delete</button></div></div></div>
-      )}
+              {/* Right Logistics Detail Column */}
+              <div className="log-drawer-right-details">
+                <div className="log-drawer-header">
+                  <div>
+                    <h2 className="log-main-title">Travel Logistics</h2>
+                    <p className="log-main-sub">ARRIVAL & STAY DETAILS</p>
+                  </div>
+                  <button className="log-close-btn" onClick={() => setShowLogisticsModal(false)}>
+                    ✕
+                  </button>
+                </div>
+
+                <div className="log-cards-stack">
+                  {/* Card 1: Arrival Flight */}
+                  <div className="log-detail-card">
+                    <div className="log-card-row1">
+                      <div className="log-badge-icon dark">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2">
+                          <path d="M22 2L11 13" />
+                          <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="log-card-type">ARRIVAL FLIGHT</span>
+                        <h4 className="log-card-name">Flight MH-842</h4>
+                      </div>
+                      <div className="log-card-meta-right">
+                        <span className="meta-terminal">Terminal 3</span>
+                        <span className="meta-gate">GATE B12</span>
+                      </div>
+                    </div>
+
+                    <div className="log-card-row2">
+                      <div>
+                        <span className="row2-lbl">SCHEDULED ARRIVAL</span>
+                        <span className="row2-val">02:45 PM</span>
+                      </div>
+                      <div>
+                        <span className="row2-lbl">ORIGIN</span>
+                        <span className="row2-val">Kuala Lumpur (KUL)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Accommodation */}
+                  <div className="log-detail-card">
+                    <div className="log-card-row1">
+                      <div className="log-badge-icon beige">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181B" strokeWidth="2">
+                          <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="log-card-type">ACCOMMODATION</span>
+                        <h4 className="log-card-name">Mandapa Reserve</h4>
+                      </div>
+                      <div className="log-card-meta-right">
+                        <span className="meta-luxury">★ LUXURY</span>
+                      </div>
+                    </div>
+
+                    <p className="log-location-text">📍 Ubud, Gianyar, Bali</p>
+
+                    <div className="log-card-row2">
+                      <div>
+                        <span className="row2-lbl">CHECK-IN TIME</span>
+                        <span className="row2-val">03:00 PM</span>
+                      </div>
+                      <button
+                        className="log-view-details-link"
+                        onClick={() => navigate('/bookings')}
+                      >
+                        VIEW DETAILS →
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Travel Insurance */}
+                  <div className="log-detail-card">
+                    <div className="log-card-row1">
+                      <div className="log-badge-icon beige">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181B" strokeWidth="2">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="insurance-title-row">
+                          <span className="log-card-type">TRAVEL INSURANCE</span>
+                          <span className="insurance-active-pill">ACTIVE</span>
+                        </div>
+                        <h4 className="log-card-name">NomadCare Premium</h4>
+                      </div>
+                      <div className="log-card-meta-right">
+                        <span className="row2-lbl">POLICY #</span>
+                        <span className="policy-val">NC-789210-BL</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Action Buttons */}
+                <div className="log-actions-column">
+                  <button
+                    className="log-btn-primary"
+                    onClick={() => toast.success('📥 Digital Travel Vouchers downloaded!')}
+                  >
+                    <span>DOWNLOAD DIGITAL VOUCHERS</span>
+                    <span>→</span>
+                  </button>
+
+                  <button
+                    className="log-btn-secondary"
+                    onClick={() => navigate('/messages')}
+                  >
+                    <span>💬</span>
+                    <span>CONTACT TRAVEL CONCIERGE</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═════════════════════════════════════════════════════════════
+            CREATE ITINERARY MODAL
+        ═════════════════════════════════════════════════════════════ */}
+        {showCreateModal && (
+          <div className="create-modal-backdrop" onClick={() => setShowCreateModal(false)}>
+            <div className="create-modal-window" onClick={(e) => e.stopPropagation()}>
+              <div className="create-modal-hdr">
+                <h3 className="create-modal-title">Create New Journey Itinerary</h3>
+                <button className="create-modal-close" onClick={() => setShowCreateModal(false)}>
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateItinerary} className="create-modal-form">
+                <div className="cm-field">
+                  <label>Destination & Region *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Kyoto, Japan or Ladakh, India"
+                    value={newDest}
+                    onChange={(e) => setNewDest(e.target.value)}
+                  />
+                </div>
+
+                <div className="cm-grid-2">
+                  <div className="cm-field">
+                    <label>Trip Dates</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Oct 15 — Oct 24"
+                      value={newDates}
+                      onChange={(e) => setNewDates(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="cm-field">
+                    <label>Duration (Days)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="7"
+                      value={newDays}
+                      onChange={(e) => setNewDays(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="cm-grid-2">
+                  <div className="cm-field">
+                    <label>Number of Stops / Villages</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 4 Stops"
+                      value={newStops}
+                      onChange={(e) => setNewStops(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="cm-field">
+                    <label>Status Tag</label>
+                    <select
+                      value={newStatusTag}
+                      onChange={(e) => setNewStatusTag(e.target.value)}
+                    >
+                      <option value="IN PROGRESS">IN PROGRESS</option>
+                      <option value="DREAMING">DREAMING</option>
+                      <option value="PLANNING">PLANNING</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="cm-field">
+                  <label>Cover Photo URL</label>
+                  <input
+                    type="url"
+                    value={newImg}
+                    onChange={(e) => setNewImg(e.target.value)}
+                  />
+                </div>
+
+                <div className="cm-actions">
+                  <button
+                    type="button"
+                    className="cm-btn-cancel"
+                    onClick={() => setShowCreateModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="cm-btn-submit">
+                    Create Itinerary
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   )
 }
