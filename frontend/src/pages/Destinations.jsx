@@ -401,12 +401,10 @@ export default function Destinations() {
   const [showAllJourneys, setShowAllJourneys] = useState(false)
   const [selectedModalDest, setSelectedModalDest] = useState(null)
 
-  // ── Gemini AI State ──
+  // ── YatraWay AI State ──
   const [aiPrompt, setAiPrompt] = useState('')
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [aiError, setAiError] = useState('')
-  const [userApiKey, setUserApiKey] = useState('')
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
   // Format price helper according to chosen currency
   const formatPrice = (dest) => {
@@ -433,7 +431,7 @@ export default function Destinations() {
     setLiked((prev) => ({ ...prev, [destId]: !prev[destId] }))
   }
 
-  // ── Gemini AI Destination Generator Handler ──
+  // ── YatraWay AI Destination Generator Handler ──
   const handleGenerateAI = async (e) => {
     e?.preventDefault()
     if (!aiPrompt.trim()) return
@@ -445,7 +443,6 @@ export default function Destinations() {
       const response = await api.post('/gemini/generate-destinations', {
         prompt: aiPrompt,
         count: 3,
-        apiKey: userApiKey || undefined,
       })
 
       if (response.data && response.data.destinations) {
@@ -627,13 +624,13 @@ export default function Destinations() {
 
         {/* Content Scrollable Area */}
         <div className="dest-content-scroll">
-          {/* ── AI PROMPT BANNER (Powered by Gemini) ── */}
+          {/* ── AI PROMPT BANNER (Powered by Groq AI) ── */}
           <div className="ai-gemini-banner">
             <div className="ai-banner-left">
-              <div className="ai-badge">✨ GEMINI AI TRAVEL CURATOR</div>
+              <div className="ai-badge">✨ YATRAWAY AI TRAVEL CURATOR</div>
               <h3 className="ai-banner-title">Describe your dream journey in India or worldwide</h3>
               <p className="ai-banner-sub">
-                Ask Gemini to generate personalized, safe solo escapes with pricing in {currency}, certified homestays, and curated itineraries.
+                Ask YatraWay AI to generate personalized, safe solo escapes with pricing in {currency}, certified homestays, and curated itineraries.
               </p>
             </div>
 
@@ -654,25 +651,6 @@ export default function Destinations() {
                     <span>GENERATE WITH AI →</span>
                   )}
                 </button>
-              </div>
-
-              <div className="ai-key-hint">
-                <button
-                  type="button"
-                  className="ai-key-toggle-btn"
-                  onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                >
-                  ⚙️ {showApiKeyInput ? 'Hide API Key Settings' : 'Custom Gemini API Key (Optional)'}
-                </button>
-                {showApiKeyInput && (
-                  <input
-                    type="password"
-                    className="ai-key-input"
-                    placeholder="Enter your Google Gemini API Key"
-                    value={userApiKey}
-                    onChange={(e) => setUserApiKey(e.target.value)}
-                  />
-                )}
               </div>
             </form>
           </div>

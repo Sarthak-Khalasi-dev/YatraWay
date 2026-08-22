@@ -446,7 +446,7 @@ export default function Trips() {
               <div className="journeys-title-group">
                 <div className="badge-hackathon-row">
                   <span className="badge-hackathon">GLOBETROTTER MULTI-CITY ENGINE</span>
-                  <span className="badge-ai-live">⚡ GEMINI AI OPTIMIZER READY</span>
+                  <span className="badge-ai-live">⚡ YATRAWAY AI OPTIMIZER READY</span>
                 </div>
                 <h1 className="journeys-hero-title">My Journeys</h1>
                 <p className="journeys-hero-sub">
@@ -1117,7 +1117,7 @@ export default function Trips() {
                     Cancel
                   </button>
                   <button type="submit" className="cm-btn-primary" disabled={isOptimizing}>
-                    {isOptimizing ? '⚡ Optimizing Itinerary with Gemini AI...' : '⚡ Generate Optimized Itinerary →'}
+                    {isOptimizing ? '⚡ Optimizing Itinerary with YatraWay AI...' : '⚡ Generate Optimized Itinerary →'}
                   </button>
                 </div>
               </form>
