@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
+import { SparkleIcon, MountainIcon, CultureIcon, LeafIcon, BeachIcon } from '../components/icons/LuxuryIcons'
 import './Destinations.css'
 import './Experiences.css'
 
@@ -12,7 +13,13 @@ const EXPERIENCES = [
   { name: 'Traditional Uji Tea Ceremony', location: 'Kyoto, Japan', cat: 'Culture', duration: '3h', price: '₹7,200', rating: 4.9, reviews: 370, img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&h=400&q=80&auto=format&fit=crop', tag: 'Trending' },
 ]
 
-const CATS = ['All', 'Adventure', 'Culture', 'Wellness', 'Nature']
+const CATS = [
+  { id: 'All', label: 'All Experiences', icon: SparkleIcon },
+  { id: 'Adventure', label: 'Adventure', icon: MountainIcon },
+  { id: 'Culture', label: 'Culture', icon: CultureIcon },
+  { id: 'Wellness', label: 'Wellness', icon: LeafIcon },
+  { id: 'Nature', label: 'Nature', icon: BeachIcon },
+]
 
 function StarFill() {
   return <svg width="12" height="12" viewBox="0 0 24 24" fill="#F59E0B" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -45,7 +52,20 @@ export default function Experiences() {
         </header>
         <div className="pg-scroll" style={{ padding:'0 24px 32px' }}>
           <div className="cat-row" style={{ paddingTop:20 }}>
-            {CATS.map(c => <button key={c} className={`cat-pill ${cat===c?'cat-pill--on':''}`} onClick={() => setCat(c)}>{c}</button>)}
+            {CATS.map(c => {
+              const Icon = c.icon
+              return (
+                <button
+                  key={c.id}
+                  className={`cat-pill ${cat===c.id?'cat-pill--on':''}`}
+                  onClick={() => setCat(c.id)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  {Icon && <Icon size={14} color="currentColor" />}
+                  <span>{c.label}</span>
+                </button>
+              )
+            })}
           </div>
           <div className="exp-grid" style={{ marginTop:16 }}>
             {filtered.map((exp, i) => {

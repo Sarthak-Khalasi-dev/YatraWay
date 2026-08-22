@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import { useToast } from '../context/ToastContext'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { PlaneIcon, HotelIcon, ShieldIcon, WaveIcon, MountainIcon, CompassIcon } from '../components/icons/LuxuryIcons'
 import './Bookings.css'
 
 const INITIAL_BOOKINGS = [
@@ -194,7 +195,7 @@ export default function Bookings() {
               <div className="bhl-actions">
                 <button
                   className="bhl-btn-primary"
-                  onClick={() => toast.success('📥 Digital Travel Vouchers downloaded!')}
+                  onClick={() => toast.success('Digital Travel Vouchers downloaded!')}
                 >
                   <span>Download Vouchers</span>
                   <span>→</span>
@@ -203,7 +204,7 @@ export default function Bookings() {
                   className="bhl-btn-secondary"
                   onClick={() => navigate('/messages')}
                 >
-                  <span>💬</span>
+                  <CompassIcon size={14} color="currentColor" />
                   <span>Travel Concierge</span>
                 </button>
               </div>
@@ -211,7 +212,9 @@ export default function Bookings() {
 
             <div className="bhl-right-quick-pills">
               <div className="bhl-quick-card">
-                <div className="bqc-icon">✈️</div>
+                <div className="bqc-icon-box dark">
+                  <PlaneIcon size={16} color="#FFFFFF" />
+                </div>
                 <div>
                   <span className="bqc-label">FLIGHT MH-842</span>
                   <p className="bqc-val">Arr: 02:45 PM • Terminal 3</p>
@@ -219,7 +222,9 @@ export default function Bookings() {
               </div>
 
               <div className="bhl-quick-card">
-                <div className="bqc-icon">🏨</div>
+                <div className="bqc-icon-box gold">
+                  <HotelIcon size={16} color="#D4A843" />
+                </div>
                 <div>
                   <span className="bqc-label">MANDAPA RESERVE</span>
                   <p className="bqc-val">Ubud, Bali • Check-in 03:00 PM</p>
@@ -227,7 +232,9 @@ export default function Bookings() {
               </div>
 
               <div className="bhl-quick-card">
-                <div className="bqc-icon">🛡️</div>
+                <div className="bqc-icon-box blue">
+                  <ShieldIcon size={16} color="#60A5FA" />
+                </div>
                 <div>
                   <span className="bqc-label">NOMADCARE ACTIVE</span>
                   <p className="bqc-val">Policy #NC-789210-BL</p>

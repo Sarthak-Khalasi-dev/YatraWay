@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { GoogleGenAI } = require('@google/genai');
 
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
 // High-definition curated image bank mapping for realistic fallbacks & AI styling
 const PHOTO_MAP = {
   ladakh: 'https://images.unsplash.com/photo-1581791538302-03537b9c97bf?w=800&h=950&q=85&auto=format&fit=crop',
@@ -34,72 +36,137 @@ const getSmartPhoto = (text) => {
   return PHOTO_MAP.default;
 };
 
+// Groq AI API Helper Function
+async function callGroqAI(systemPrompt, userPrompt) {
+  const apiKey = process.env.GROQ_API_KEY || GROQ_API_KEY;
+  if (!apiKey) throw new Error('No Groq API Key found');
+
+  const modelsToTry = ['groq/compound', 'openai/gpt-oss-120b', 'qwen/qwen3.6-27b'];
+
+  for (const model of modelsToTry) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.5,
+        })
+      });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const data = await response.json();
+      const contentText = data.choices?.[0]?.message?.content || '{}';
+      return JSON.parse(contentText);
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error('All Groq AI models failed');
+}
+
 // @route   POST /api/gemini/generate-destinations
-// @desc    Generate personalized destinations using Gemini AI
+// @desc    Generate personalized luxury travel destinations using Groq AI
 router.post('/generate-destinations', async (req, res) => {
   try {
-    const { prompt, count = 3, apiKey } = req.body;
-    const keyToUse = apiKey || process.env.GEMINI_API_KEY;
+    const { prompt, count = 3 } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ message: 'Prompt is required' });
     }
 
-    if (keyToUse) {
-      try {
-        const ai = new GoogleGenAI({ apiKey: keyToUse });
-        const systemInstruction = `You are an elite luxury travel curator specializing in solo, safe, and culturally rich travel, with strong expertise in India and top global destinations.
-Generate an array of ${count} destinations in valid JSON based on user prompt.
-Format MUST strictly be a JSON Array with objects having:
-- id: string (kebab-case)
-- name: string
-- country: string
-- region: string
-- priceInINR: number (in INR rupees, e.g. 35000)
-- priceInUSD: number (in USD, e.g. 420)
-- tag: string ("ADVENTURE" | "CULTURE" | "HERITAGE" | "WELLNESS" | "WILDLIFE" | "COASTAL")
-- rating: number (e.g. 4.9)
-- reviews: string (e.g. "1.4k")
-- description: string (2-3 sentences of inspiring, evocative travel copy)
-- activities: array of strings (e.g. ["Hiking & Trekking", "Museums & Art"])
-- duration: string (e.g. "5 Days / 4 Nights")
-- safetyScore: string (e.g. "9.8 / 10")
-- bestSeason: string (e.g. "Oct - March")
-- highlights: array of 4 strings (e.g. ["Monastery Sunrise", "Local Cooking", ...])
-- imageQuery: string (a one-word keyword for photo matching, e.g. "kerala", "ladakh", "rajasthan")
-`;
+    const systemPrompt = `You are YatraWay's Master Travel Curator AI — world's top luxury solo travel planner.
+Generate a JSON object containing a "destinations" key with an array of ${count} rich, highly realistic, custom travel destinations tailored to the user's query.
+Format MUST strictly be JSON with key "destinations":
+[
+  {
+    "id": "custom-1",
+    "name": "Full Destination Name",
+    "country": "Country Name",
+    "region": "State / Region",
+    "priceInINR": 35000,
+    "priceInUSD": 420,
+    "tag": "ADVENTURE" | "CULTURE" | "HERITAGE" | "WELLNESS" | "WILDLIFE" | "COASTAL",
+    "rating": 4.9,
+    "reviews": "1.4k",
+    "description": "2-3 sentences of inspiring, evocative luxury travel copy highlighting safety, homestays, and unique experiences.",
+    "activities": ["Hiking & Trekking", "Museums & Art"],
+    "duration": "5 Days / 4 Nights",
+    "safetyScore": "9.8 / 10",
+    "bestSeason": "Oct - March",
+    "highlights": ["Highlight 1", "Highlight 2", "Highlight 3", "Highlight 4"],
+    "imageQuery": "one word location name e.g. ladakh, kerala, udaipur, rishikesh, spiti, meghalaya"
+  }
+]`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: `Generate ${count} destinations for query: "${prompt}". Special focus on India if applicable or requested. Return ONLY JSON.`,
-          config: {
-            systemInstruction,
-            responseMimeType: 'application/json',
-          },
-        });
+    const userPrompt = `Generate ${count} custom luxury destinations for query: "${prompt}". Focus on authentic experiences, pricing in INR, safety for solo female & male travelers, certified homestays, and hidden gems. Return JSON.`;
 
-        const jsonText = response.text || '[]';
-        let parsed = JSON.parse(jsonText);
-        if (!Array.isArray(parsed) && parsed.destinations) {
-          parsed = parsed.destinations;
-        }
+    try {
+      const groqResult = await callGroqAI(systemPrompt, userPrompt);
+      let parsed = groqResult.destinations || groqResult;
+      if (!Array.isArray(parsed) && typeof parsed === 'object') {
+        parsed = Object.values(parsed).find(v => Array.isArray(v)) || [];
+      }
 
-        // Attach high-res images
+      if (Array.isArray(parsed) && parsed.length > 0) {
         const enriched = parsed.map((item, idx) => ({
           ...item,
-          id: item.id || `custom-${Date.now()}-${idx}`,
+          id: item.id || `groq-${Date.now()}-${idx}`,
           priceDisplayINR: `₹${(item.priceInINR || 35000).toLocaleString('en-IN')}`,
           priceDisplayUSD: `$${(item.priceInUSD || 420).toLocaleString('en-US')}`,
           img: getSmartPhoto(item.imageQuery || item.name || item.region || item.country),
         }));
 
-        return res.json({ success: true, source: 'gemini-ai', destinations: enriched });
-      } catch (geminiError) {
-        console.warn('Gemini API call failed, falling back to smart dynamic generator:', geminiError.message);
+        return res.json({ success: true, source: 'groq-ai', destinations: enriched });
+      }
+    } catch (groqErr) {
+      console.warn('Groq AI call failed, trying Gemini / dynamic fallback:', groqErr.message);
+    }
+
+    // Try Gemini Fallback if available
+    const keyToUse = process.env.GEMINI_API_KEY;
+    if (keyToUse) {
+      try {
+        const ai = new GoogleGenAI({ apiKey: keyToUse });
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: `Generate ${count} destinations for query: "${prompt}". Return ONLY JSON array.`,
+          config: {
+            systemInstruction: systemPrompt,
+            responseMimeType: 'application/json',
+          },
+        });
+
+        const parsed = JSON.parse(response.text || '[]');
+        const enriched = (Array.isArray(parsed) ? parsed : []).map((item, idx) => ({
+          ...item,
+          id: item.id || `gemini-${Date.now()}-${idx}`,
+          priceDisplayINR: `₹${(item.priceInINR || 35000).toLocaleString('en-IN')}`,
+          priceDisplayUSD: `$${(item.priceInUSD || 420).toLocaleString('en-US')}`,
+          img: getSmartPhoto(item.imageQuery || item.name || item.region || item.country),
+        }));
+
+        if (enriched.length > 0) {
+          return res.json({ success: true, source: 'gemini-ai', destinations: enriched });
+        }
+      } catch (geminiErr) {
+        console.warn('Gemini fallback failed:', geminiErr.message);
       }
     }
 
-    // High-quality smart dynamic fallback when API key is not configured or rate limited
+    // High-quality smart dynamic fallback
     const p = prompt.toLowerCase();
     const fallbackResults = [
       {
@@ -114,7 +181,7 @@ Format MUST strictly be a JSON Array with objects having:
         tag: p.includes('mountain') ? 'ADVENTURE' : p.includes('beach') ? 'COASTAL' : 'HERITAGE',
         rating: 4.9,
         reviews: '1.4k',
-        description: `Custom curated for "${prompt}". Experience private boutique stays, verified local women-friendly safety escorts, and immersive cultural heritage.`,
+        description: `Custom curated for "${prompt}". Experience private boutique stays, verified local safety escorts, and immersive cultural heritage.`,
         img: p.includes('beach') ? PHOTO_MAP.gokarna : p.includes('mountain') ? PHOTO_MAP.spiti : PHOTO_MAP.udaipur,
         activities: p.includes('beach') ? ['Water Sports'] : ['Hiking & Trekking', 'Museums & Art'],
         duration: '6 Days / 5 Nights',
@@ -172,7 +239,7 @@ Format MUST strictly be a JSON Array with objects having:
 });
 
 // @route   POST /api/gemini/optimize-itinerary
-// @desc    Smart AI Trip Optimizer for Multi-City Itineraries & Budget
+// @desc    Smart AI Trip Optimizer using Groq AI Engine
 router.post('/optimize-itinerary', async (req, res) => {
   try {
     const {
@@ -182,62 +249,52 @@ router.post('/optimize-itinerary', async (req, res) => {
       budgetINR = 60000,
       interests = ['Culture', 'Food', 'Sightseeing'],
       travelStyle = 'Boutique',
-      apiKey,
     } = req.body;
 
-    const keyToUse = apiKey || process.env.GEMINI_API_KEY;
-
-    if (keyToUse) {
-      try {
-        const ai = new GoogleGenAI({ apiKey: keyToUse });
-        const systemInstruction = `You are the GlobeTrotter Smart Trip Optimizer AI.
+    const systemPrompt = `You are YatraWay's Master Multi-City Trip Optimizer AI.
 Generate a structured multi-city itinerary in valid JSON based on user inputs.
-Format strictly JSON with:
+Format strictly JSON object with keys:
 {
   "optimizedCities": [
-    { "name": string, "country": string, "days": number, "dates": string }
+    { "name": "City Name", "country": "Country", "days": 3, "dates": "Day 1 - Day 3" }
   ],
   "days": [
     {
-      "dayNumber": number,
-      "date": string,
-      "city": string,
-      "theme": string,
+      "dayNumber": 1,
+      "date": "Day 1",
+      "city": "City Name",
+      "theme": "Theme string",
       "activities": [
-        { "name": string, "time": string, "costINR": number, "category": string, "desc": string, "duration": string }
+        { "name": "Activity Name", "time": "09:00 AM", "costINR": 1200, "category": "Culture", "desc": "Short description", "duration": "2.5h" }
       ],
-      "dayTotalINR": number
+      "dayTotalINR": 2000
     }
   ],
   "budgetBreakdown": {
-    "transportINR": number,
-    "hotelINR": number,
-    "activitiesINR": number,
-    "foodINR": number,
-    "totalINR": number,
-    "avgPerDayINR": number,
-    "budgetRemainingINR": number,
-    "isWithinBudget": boolean
+    "transportINR": 12000,
+    "hotelINR": 24000,
+    "activitiesINR": 14000,
+    "foodINR": 10000,
+    "totalINR": 60000,
+    "avgPerDayINR": 8500,
+    "budgetRemainingINR": 0,
+    "isWithinBudget": true
   },
   "aiOptimizationNotes": [
-    string (e.g. "✓ Route reordered to save 3h transit", "✓ Grouped nearby landmarks for zero backtrack")
+    "✓ Note 1",
+    "✓ Note 2"
   ]
 }`;
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: `Create optimized multi-city itinerary for Trip: "${tripName}". Cities: ${JSON.stringify(cities)}. Total Days: ${days}. Target Budget: ₹${budgetINR}. Interests: ${interests.join(', ')}. Style: ${travelStyle}. Return ONLY JSON.`,
-          config: {
-            systemInstruction,
-            responseMimeType: 'application/json',
-          },
-        });
+    const userPrompt = `Create optimized multi-city itinerary for Trip: "${tripName}". Cities: ${JSON.stringify(cities)}. Total Days: ${days}. Target Budget: ₹${budgetINR}. Interests: ${interests.join(', ')}. Style: ${travelStyle}. Return JSON.`;
 
-        const parsed = JSON.parse(response.text);
-        return res.json({ success: true, source: 'gemini-ai', data: parsed });
-      } catch (geminiErr) {
-        console.warn('Gemini optimization failed, using smart fallback engine:', geminiErr.message);
+    try {
+      const parsed = await callGroqAI(systemPrompt, userPrompt);
+      if (parsed && parsed.optimizedCities && parsed.days) {
+        return res.json({ success: true, source: 'groq-ai', data: parsed });
       }
+    } catch (groqErr) {
+      console.warn('Groq optimization failed, trying fallback:', groqErr.message);
     }
 
     // Smart Local Rule-Based Multi-City Optimizer Fallback
@@ -320,4 +377,3 @@ Format strictly JSON with:
 });
 
 module.exports = router;
-

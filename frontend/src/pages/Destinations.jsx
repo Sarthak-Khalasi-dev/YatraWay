@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import api from '../services/api'
+import { SparkleIcon, IndiaIcon, MountainIcon, WaveIcon, MonumentIcon, LeafIcon, GlobeIcon } from '../components/icons/LuxuryIcons'
 import './Destinations.css'
 
 // ── Comprehensive Curated Destinations (Heavy India Focus + World Classics) ──
@@ -401,12 +402,10 @@ export default function Destinations() {
   const [showAllJourneys, setShowAllJourneys] = useState(false)
   const [selectedModalDest, setSelectedModalDest] = useState(null)
 
-  // ── Gemini AI State ──
+  // ── YatraWay AI State ──
   const [aiPrompt, setAiPrompt] = useState('')
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [aiError, setAiError] = useState('')
-  const [userApiKey, setUserApiKey] = useState('')
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
   // Format price helper according to chosen currency
   const formatPrice = (dest) => {
@@ -433,7 +432,7 @@ export default function Destinations() {
     setLiked((prev) => ({ ...prev, [destId]: !prev[destId] }))
   }
 
-  // ── Gemini AI Destination Generator Handler ──
+  // ── YatraWay AI Destination Generator Handler ──
   const handleGenerateAI = async (e) => {
     e?.preventDefault()
     if (!aiPrompt.trim()) return
@@ -445,7 +444,6 @@ export default function Destinations() {
       const response = await api.post('/gemini/generate-destinations', {
         prompt: aiPrompt,
         count: 3,
-        apiKey: userApiKey || undefined,
       })
 
       if (response.data && response.data.destinations) {
@@ -627,13 +625,13 @@ export default function Destinations() {
 
         {/* Content Scrollable Area */}
         <div className="dest-content-scroll">
-          {/* ── AI PROMPT BANNER (Powered by Gemini) ── */}
+          {/* ── AI PROMPT BANNER (Powered by Groq AI) ── */}
           <div className="ai-gemini-banner">
             <div className="ai-banner-left">
-              <div className="ai-badge">✨ GEMINI AI TRAVEL CURATOR</div>
+              <div className="ai-badge">✨ YATRAWAY AI TRAVEL CURATOR</div>
               <h3 className="ai-banner-title">Describe your dream journey in India or worldwide</h3>
               <p className="ai-banner-sub">
-                Ask Gemini to generate personalized, safe solo escapes with pricing in {currency}, certified homestays, and curated itineraries.
+                Ask YatraWay AI to generate personalized, safe solo escapes with pricing in {currency}, certified homestays, and curated itineraries.
               </p>
             </div>
 
@@ -655,47 +653,33 @@ export default function Destinations() {
                   )}
                 </button>
               </div>
-
-              <div className="ai-key-hint">
-                <button
-                  type="button"
-                  className="ai-key-toggle-btn"
-                  onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                >
-                  ⚙️ {showApiKeyInput ? 'Hide API Key Settings' : 'Custom Gemini API Key (Optional)'}
-                </button>
-                {showApiKeyInput && (
-                  <input
-                    type="password"
-                    className="ai-key-input"
-                    placeholder="Enter your Google Gemini API Key"
-                    value={userApiKey}
-                    onChange={(e) => setUserApiKey(e.target.value)}
-                  />
-                )}
-              </div>
             </form>
           </div>
 
           {/* ── QUICK REGION / CATEGORY TABS ── */}
           <div className="dest-category-tabs">
             {[
-              { id: 'All', label: 'All Curated Escapes' },
-              { id: 'India', label: '🇮🇳 Incredible India' },
-              { id: 'Mountains', label: '⛰️ Mountains & Treks' },
-              { id: 'Beaches', label: '🌊 Beaches & Coastal' },
-              { id: 'Heritage', label: '🏛️ Royal Heritage' },
-              { id: 'Wellness', label: '🌿 Wellness & Nature' },
-              { id: 'Global', label: '✈️ Global Classics' },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                className={`dest-cat-tab ${activeCategory === cat.id ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat.id)}
-              >
-                {cat.label}
-              </button>
-            ))}
+              { id: 'All', label: 'All Curated Escapes', icon: SparkleIcon },
+              { id: 'India', label: 'Incredible India', icon: IndiaIcon },
+              { id: 'Mountains', label: 'Mountains & Treks', icon: MountainIcon },
+              { id: 'Beaches', label: 'Beaches & Coastal', icon: WaveIcon },
+              { id: 'Heritage', label: 'Royal Heritage', icon: MonumentIcon },
+              { id: 'Wellness', label: 'Wellness & Nature', icon: LeafIcon },
+              { id: 'Global', label: 'Global Classics', icon: GlobeIcon },
+            ].map((cat) => {
+              const Icon = cat.icon
+              return (
+                <button
+                  key={cat.id}
+                  className={`dest-cat-tab ${activeCategory === cat.id ? 'active' : ''}`}
+                  onClick={() => setActiveCategory(cat.id)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                >
+                  {Icon && <Icon size={15} color="currentColor" />}
+                  <span>{cat.label}</span>
+                </button>
+              )
+            })}
           </div>
 
           {/* ── 2-COLUMN MAIN LAYOUT ── */}
@@ -962,7 +946,11 @@ export default function Destinations() {
               <div className="dest-modal-overlay">
                 <div className="dest-modal-tags-row">
                   <span className="dest-modal-tag">{selectedModalDest.tag}</span>
-                  {selectedModalDest.isIndia && <span className="dest-modal-tag india">🇮🇳 INCREDIBLE INDIA</span>}
+                  {selectedModalDest.isIndia && (
+                    <span className="dest-modal-tag india" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <IndiaIcon size={13} color="currentColor" /> INCREDIBLE INDIA
+                    </span>
+                  )}
                 </div>
                 <h3 className="dest-modal-title">{selectedModalDest.name}</h3>
                 <p className="dest-modal-loc">{selectedModalDest.region}, {selectedModalDest.country}</p>

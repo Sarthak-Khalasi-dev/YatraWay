@@ -156,7 +156,7 @@ export default function LoginPage() {
           </div>
 
           <div className="auth-heading">
-            <h2 className="auth-title">{tab === 'signin' ? 'Welcome back! 👋' : 'Join YatraWay 🌍'}</h2>
+            <h2 className="auth-title">{tab === 'signin' ? 'Welcome back' : 'Join YatraWay'}</h2>
             <p className="auth-subtitle">{tab === 'signin' ? 'Sign in to continue your journey' : 'Create your free account today'}</p>
           </div>
 

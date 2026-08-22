@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useTheme } from '../context/ThemeContext'
 import { logout } from '../store/slices/authSlice'
+import { MoonIcon, SunIcon, GiftIcon, LogoutIcon } from './icons/LuxuryIcons'
 import './Sidebar.css'
 
 const NAV = [
@@ -77,10 +78,35 @@ export default function Sidebar() {
 
       {!collapsed && (
         <div className="sb-bottom">
-          <div className="sb-theme-row"><span className="sb-theme-label">{dark ? '🌙 Dark' : '☀️ Light'} Mode</span><button className={`sb-toggle ${dark ? 'sb-toggle--on' : ''}`} onClick={toggle}><span className="sb-toggle-thumb" /></button></div>
-          <div className="sb-referral"><div className="sb-referral-icon">🎁</div><div><p className="sb-referral-title">Get Extra 10% Off</p><p className="sb-referral-desc">Refer friends & earn rewards</p></div><button className="sb-referral-btn" onClick={() => navigate('/profile')}>→</button></div>
-          <div className="sb-profile" onClick={() => navigate('/profile')}><img src={avatarSrc} className="sb-avatar" alt={displayName} /><div className="sb-profile-info"><p className="sb-profile-name">{displayName}</p><p className="sb-profile-role">🌍 Explorer</p></div></div>
-          <button className="sb-logout" onClick={handleLogout}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</button>
+          <div className="sb-theme-row">
+            <span className="sb-theme-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {dark ? <MoonIcon size={14} color="#A1A1AA" /> : <SunIcon size={14} color="#D4A843" />}
+              {dark ? 'Dark' : 'Light'} Mode
+            </span>
+            <button className={`sb-toggle ${dark ? 'sb-toggle--on' : ''}`} onClick={toggle}>
+              <span className="sb-toggle-thumb" />
+            </button>
+          </div>
+          <div className="sb-referral">
+            <div className="sb-referral-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <GiftIcon size={16} color="#D4A843" />
+            </div>
+            <div>
+              <p className="sb-referral-title">Get Extra 10% Off</p>
+              <p className="sb-referral-desc">Refer friends & earn rewards</p>
+            </div>
+            <button className="sb-referral-btn" onClick={() => navigate('/profile')}>→</button>
+          </div>
+          <div className="sb-profile" onClick={() => navigate('/profile')}>
+            <img src={avatarSrc} className="sb-avatar" alt={displayName} />
+            <div className="sb-profile-info">
+              <p className="sb-profile-name">{displayName}</p>
+              <p className="sb-profile-role">Explorer</p>
+            </div>
+          </div>
+          <button className="sb-logout" onClick={handleLogout}>
+            <LogoutIcon size={15} /> Logout
+          </button>
         </div>
       )}
 
