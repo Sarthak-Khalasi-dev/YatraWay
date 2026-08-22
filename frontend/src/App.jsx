@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { AuthProvider }   from './context/AuthContext'
 import { ThemeProvider }  from './context/ThemeContext'
 import { StorageProvider } from './context/StorageContext'
@@ -57,21 +58,23 @@ function AppContent() {
         <meta property="og:type" content="website" />
       </Helmet>
       <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/"             element={<LoginPage />} />
-          <Route path="/dashboard"    element={<Wrap><Dashboard /></Wrap>} />
-          <Route path="/destinations" element={<Wrap><Destinations /></Wrap>} />
-          <Route path="/trips"        element={<Wrap><Trips /></Wrap>} />
-          <Route path="/bookings"     element={<Wrap><Bookings /></Wrap>} />
-          <Route path="/experiences"  element={<Wrap><Experiences /></Wrap>} />
-          <Route path="/favorites"    element={<Wrap><Favorites /></Wrap>} />
-          <Route path="/messages"     element={<Wrap><Messages /></Wrap>} />
-          <Route path="/travel-style" element={<Wrap><TravelStyle /></Wrap>} />
-          <Route path="/settings"     element={<Wrap><Settings /></Wrap>} />
-          <Route path="/profile"      element={<Wrap><Profile /></Wrap>} />
-          <Route path="/emergency"    element={<Wrap><Emergency /></Wrap>} />
-          <Route path="*"             element={<Navigate to="/" replace />} />
-        </Routes>
+        <AnimatePresence mode="wait" initial={false}>
+          <Routes location={location} key={location.pathname}>
+            <Route path="/"             element={<LoginPage />} />
+            <Route path="/dashboard"    element={<Wrap><Dashboard /></Wrap>} />
+            <Route path="/destinations" element={<Wrap><Destinations /></Wrap>} />
+            <Route path="/trips"        element={<Wrap><Trips /></Wrap>} />
+            <Route path="/bookings"     element={<Wrap><Bookings /></Wrap>} />
+            <Route path="/experiences"  element={<Wrap><Experiences /></Wrap>} />
+            <Route path="/favorites"    element={<Wrap><Favorites /></Wrap>} />
+            <Route path="/messages"     element={<Wrap><Messages /></Wrap>} />
+            <Route path="/travel-style" element={<Wrap><TravelStyle /></Wrap>} />
+            <Route path="/settings"     element={<Wrap><Settings /></Wrap>} />
+            <Route path="/profile"      element={<Wrap><Profile /></Wrap>} />
+            <Route path="/emergency"    element={<Wrap><Emergency /></Wrap>} />
+            <Route path="*"             element={<Navigate to="/" replace />} />
+          </Routes>
+        </AnimatePresence>
       </Suspense>
     </>
   );

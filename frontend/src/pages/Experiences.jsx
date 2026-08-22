@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import { SparkleIcon, MountainIcon, CultureIcon, LeafIcon, BeachIcon } from '../components/icons/LuxuryIcons'
 import './Destinations.css'
@@ -33,6 +34,20 @@ const TAG_COLORS = {
   'Exclusive':  { bg: 'rgba(139,92,246,0.15)', color: '#8B5CF6' },
 }
 
+/* ── Animation Variants ── */
+const staggerGrid = {
+  animate: { transition: { staggerChildren: 0.07, delayChildren: 0.06 } },
+}
+const cardEnter = {
+  initial: { opacity: 0, y: 26, scale: 0.96 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 320, damping: 25 } },
+  exit:    { opacity: 0, scale: 0.95, transition: { duration: 0.15 } },
+}
+const headerEnter = {
+  initial: { opacity: 0, y: -16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+}
+
 export default function Experiences() {
   const [mounted, setMounted] = useState(false)
   const [cat, setCat] = useState('All')
@@ -44,53 +59,86 @@ export default function Experiences() {
     <div className={`pg-root ${mounted ? 'pg-on' : ''}`}>
       <Sidebar />
       <div className="pg-main">
-        <header className="pg-header">
+        <motion.header className="pg-header" variants={headerEnter} initial="initial" animate="animate">
           <div>
             <h1 className="pg-title">Experiences</h1>
             <p className="pg-sub">Handpicked moments to make your journey unforgettable</p>
           </div>
-        </header>
+        </motion.header>
         <div className="pg-scroll" style={{ padding:'0 24px 32px' }}>
-          <div className="cat-row" style={{ paddingTop:20 }}>
+          <motion.div
+            className="cat-row"
+            style={{ paddingTop:20 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+          >
             {CATS.map(c => {
               const Icon = c.icon
               return (
-                <button
+                <motion.button
                   key={c.id}
                   className={`cat-pill ${cat===c.id?'cat-pill--on':''}`}
                   onClick={() => setCat(c.id)}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  whileHover={{ scale: 1.05, y: -1 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                 >
                   {Icon && <Icon size={14} color="currentColor" />}
                   <span>{c.label}</span>
-                </button>
+                </motion.button>
               )
             })}
-          </div>
-          <div className="exp-grid" style={{ marginTop:16 }}>
-            {filtered.map((exp, i) => {
-              const ts = TAG_COLORS[exp.tag] || {}
-              return (
-                <div className="exp-card" key={exp.name} style={{ animationDelay:`${i*0.07}s` }}>
-                  <div className="exp-img-wrap">
-                    <img src={exp.img} alt={exp.name} className="exp-img" />
-                    <span className="exp-tag" style={{ background:ts.bg, color:ts.color }}>{exp.tag}</span>
-                  </div>
-                  <div className="exp-body">
-                    <p className="exp-name">{exp.name}</p>
-                    <p className="exp-loc">📍 {exp.location} · ⏱ {exp.duration}</p>
-                    <div className="exp-bottom">
-                      <div>
-                        <div className="dest-rating"><StarFill /><span className="dest-score">{exp.rating}</span><span className="dest-rev">({exp.reviews})</span></div>
-                        <p className="exp-price">{exp.price} <span>/person</span></p>
-                      </div>
-                      <button className="dest-btn">Book Now</button>
+          </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              className="exp-grid"
+              style={{ marginTop:16 }}
+              key={cat}
+              variants={staggerGrid}
+              initial="initial"
+              animate="animate"
+              exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            >
+              {filtered.map((exp) => {
+                const ts = TAG_COLORS[exp.tag] || {}
+                return (
+                  <motion.div
+                    className="exp-card"
+                    key={exp.name}
+                    variants={cardEnter}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 22 }}
+                  >
+                    <div className="exp-img-wrap">
+                      <img src={exp.img} alt={exp.name} className="exp-img" />
+                      <span className="exp-tag" style={{ background:ts.bg, color:ts.color }}>{exp.tag}</span>
                     </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                    <div className="exp-body">
+                      <p className="exp-name">{exp.name}</p>
+                      <p className="exp-loc">📍 {exp.location} · ⏱ {exp.duration}</p>
+                      <div className="exp-bottom">
+                        <div>
+                          <div className="dest-rating"><StarFill /><span className="dest-score">{exp.rating}</span><span className="dest-rev">({exp.reviews})</span></div>
+                          <p className="exp-price">{exp.price} <span>/person</span></p>
+                        </div>
+                        <motion.button
+                          className="dest-btn"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        >
+                          Book Now
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>
