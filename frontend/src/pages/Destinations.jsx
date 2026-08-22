@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import api from '../services/api'
-import { SparkleIcon, IndiaIcon, MountainIcon, WaveIcon, MonumentIcon, LeafIcon, GlobeIcon } from '../components/icons/LuxuryIcons'
+import { SparkleIcon, IndiaIcon, MountainIcon, WaveIcon, MonumentIcon, LeafIcon, GlobeIcon, CalendarIcon, ShieldIcon, CompassIcon, MapPinIcon } from '../components/icons/LuxuryIcons'
 import './Destinations.css'
 
 // ── Comprehensive Curated Destinations (Heavy India Focus + World Classics) ──
@@ -406,6 +406,8 @@ export default function Destinations() {
   const [aiPrompt, setAiPrompt] = useState('')
   const [isGeneratingAI, setIsGeneratingAI] = useState(false)
   const [aiError, setAiError] = useState('')
+  const [aiSpotlight, setAiSpotlight] = useState(null)
+  const [aiSearchTag, setAiSearchTag] = useState('')
 
   // Format price helper according to chosen currency
   const formatPrice = (dest) => {
@@ -437,31 +439,39 @@ export default function Destinations() {
     e?.preventDefault()
     if (!aiPrompt.trim()) return
 
+    const currentPrompt = aiPrompt.trim()
     setIsGeneratingAI(true)
     setAiError('')
 
     try {
       const response = await api.post('/gemini/generate-destinations', {
-        prompt: aiPrompt,
+        prompt: currentPrompt,
         count: 3,
       })
 
-      if (response.data && response.data.destinations) {
+      if (response.data && response.data.destinations && response.data.destinations.length > 0) {
         const newDestinations = response.data.destinations.map((d) => ({
           ...d,
           isIndia: d.country?.toLowerCase() === 'india' || true,
           priceINR: d.priceInINR || 35000,
           priceUSD: d.priceInUSD || 420,
+          isAiGenerated: true,
         }))
 
-        // Prepend AI generated escapes to top of list
-        setDestList((prev) => [...newDestinations, ...prev])
+        // Prepend AI generated escapes and set spotlight
+        setAiSpotlight(newDestinations[0])
+        setAiSearchTag(currentPrompt)
+        setDestList((prev) => [...newDestinations, ...prev.filter((p) => !newDestinations.some((n) => n.id === p.id))])
         setAiPrompt('')
         setShowAllJourneys(true)
+
+        setTimeout(() => {
+          document.querySelector('.ai-spotlight-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
       }
     } catch (err) {
-      console.error('Gemini error:', err)
-      setAiError('Unable to generate with Gemini. Fallback loaded.')
+      console.error('Groq AI error:', err)
+      setAiError('Unable to generate with AI. Fallback loaded.')
     } finally {
       setIsGeneratingAI(false)
     }
@@ -692,13 +702,28 @@ export default function Destinations() {
               <div className="refine-section">
                 <span className="refine-label">ACTIVE FILTERS</span>
                 <div className="refine-tag-group">
+                  {aiSearchTag && (
+                    <button
+                      className="refine-tag-pill"
+                      style={{ borderColor: '#D4A843', background: 'rgba(212, 168, 67, 0.12)', color: '#D4A843' }}
+                      onClick={() => {
+                        setAiSpotlight(null)
+                        setAiSearchTag('')
+                      }}
+                      title="Clear AI Prompt Filter"
+                    >
+                      <SparkleIcon size={12} color="#D4A843" />
+                      <span>AI: {aiSearchTag.length > 18 ? aiSearchTag.substring(0, 18) + '...' : aiSearchTag}</span>
+                      <span className="refine-tag-x">✕</span>
+                    </button>
+                  )}
                   {activeTags.map((tag) => (
                     <button key={tag} className="refine-tag-pill" onClick={() => removeTag(tag)}>
                       <span>{tag}</span>
                       <span className="refine-tag-x">✕</span>
                     </button>
                   ))}
-                  {activeTags.length === 0 && (
+                  {activeTags.length === 0 && !aiSearchTag && (
                     <button
                       className="refine-tag-reset"
                       onClick={() => setActiveTags(['ADVENTURE', 'CULTURE', 'HERITAGE', 'WELLNESS', 'COASTAL'])}
@@ -792,10 +817,88 @@ export default function Destinations() {
 
             {/* ── RIGHT COLUMN: CURATED ESCAPES ── */}
             <main className="curated-main">
+              {/* ── AI SPOTLIGHT HERO SHOWCASE (When AI generates tailored itinerary) ── */}
+              {aiSpotlight && (
+                <section className="ai-spotlight-card">
+                  <div className="asc-img-wrap">
+                    <img src={aiSpotlight.img} alt={aiSpotlight.name} className="asc-img" />
+                    <div className="asc-badge-floating">
+                      <SparkleIcon size={12} color="#D4A843" />
+                      <span>TAILORED AI CURATED ESCAPE</span>
+                    </div>
+                    <button
+                      className="asc-close-btn"
+                      onClick={() => {
+                        setAiSpotlight(null)
+                        setAiSearchTag('')
+                      }}
+                      title="Dismiss AI Spotlight"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="asc-content">
+                    <div className="asc-header-row">
+                      <div>
+                        <span className="asc-loc-tag">
+                          <MapPinIcon size={12} color="#D4A843" /> {aiSpotlight.region || aiSpotlight.country}, {aiSpotlight.country}
+                        </span>
+                        <h2 className="asc-title">{aiSpotlight.name}</h2>
+                      </div>
+                      <div className="asc-price-box">
+                        <span className="asc-price-val">{formatPrice(aiSpotlight)}</span>
+                        <span className="asc-price-sub">/ traveler</span>
+                      </div>
+                    </div>
+
+                    <p className="asc-desc">{aiSpotlight.description}</p>
+
+                    {aiSpotlight.highlights && aiSpotlight.highlights.length > 0 && (
+                      <div className="asc-highlights-list">
+                        <span className="asc-highlights-title">CURATED HIGHLIGHTS & LOCAL SECRETS</span>
+                        <div className="asc-chips-row">
+                          {aiSpotlight.highlights.map((h, i) => (
+                            <span key={i} className="asc-highlight-chip">
+                              • {h}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="asc-meta-row">
+                      <span className="asc-meta-item">
+                        <CalendarIcon size={13} color="#8C867A" /> {aiSpotlight.duration || '4 Days / 3 Nights'}
+                      </span>
+                      <span className="asc-meta-item">
+                        <ShieldIcon size={13} color="#10B981" /> {aiSpotlight.safetyScore || '9.9/10 Solo Safe'}
+                      </span>
+                      {aiSpotlight.bestSeason && (
+                        <span className="asc-meta-item">
+                          <CompassIcon size={13} color="#D4A843" /> Best: {aiSpotlight.bestSeason}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="asc-actions-row">
+                      <button className="asc-btn-primary" onClick={() => handlePlanJourney(aiSpotlight)}>
+                        <span>Plan Multi-City Journey →</span>
+                      </button>
+                      <button className="asc-btn-secondary" onClick={() => setSelectedModalDest(aiSpotlight)}>
+                        <span>Inspect Full Dossier</span>
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {/* Header Title + Subtitle + Sort Dropdown */}
               <div className="curated-header">
                 <div>
-                  <h1 className="curated-heading">Curated Escapes</h1>
+                  <h1 className="curated-heading">
+                    {aiSpotlight ? 'More Curated Journeys & Escapes' : 'Curated Escapes'}
+                  </h1>
                   <p className="curated-subheading">
                     Discovery awaits among our {filtered.length} chosen paths in India and worldwide.
                   </p>
@@ -830,7 +933,11 @@ export default function Destinations() {
                         {/* Top Left Tag Badge */}
                         <div className="escape-tag-badge">
                           <span>{dest.tag}</span>
-                          {dest.isIndia && <span className="india-flag-badge">🇮🇳</span>}
+                          {dest.isIndia && (
+                            <span className="india-flag-badge" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                              <IndiaIcon size={12} color="#D4A843" />
+                            </span>
+                          )}
                         </div>
 
                         {/* Top Right Heart Icon */}
@@ -877,8 +984,12 @@ export default function Destinations() {
 
                         {/* Safety & Duration Badge */}
                         <div className="escape-meta-tags">
-                          <span className="escape-meta-pill">⏱️ {dest.duration}</span>
-                          <span className="escape-meta-pill safe">🛡️ {dest.safetyScore?.split(' ')[0]}</span>
+                          <span className="escape-meta-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                            <CalendarIcon size={12} color="#8C867A" /> {dest.duration}
+                          </span>
+                          <span className="escape-meta-pill safe" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                            <ShieldIcon size={12} color="#10B981" /> {dest.safetyScore?.split(' ')[0]}
+                          </span>
                         </div>
 
                         {/* View Details Button */}
