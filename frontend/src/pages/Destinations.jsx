@@ -428,11 +428,14 @@ export default function Destinations() {
 
   // Format price helper according to chosen currency
   const formatPrice = (dest) => {
+    if (!dest) return '₹0'
+    const pINR = dest.priceINR ?? dest.priceInINR
+    const pUSD = dest.priceUSD ?? dest.priceInUSD
     if (currency === 'INR') {
-      const val = dest.priceINR || Math.round(dest.priceUSD * 85)
+      const val = pINR || (pUSD ? Math.round(pUSD * 85) : 11750)
       return `₹${val.toLocaleString('en-IN')}`
     } else {
-      const val = dest.priceUSD || Math.round(dest.priceINR / 85)
+      const val = pUSD || (pINR ? Math.round(pINR / 85) : 138)
       return `$${val.toLocaleString('en-US')}`
     }
   }
@@ -518,11 +521,20 @@ export default function Destinations() {
 
     const daysMatch   = currentPrompt.match(/(\d+)\s*(?:day|days|d|nights)/i)
     const peopleMatch = currentPrompt.match(/(\d+)\s*(?:people|person|traveler|travelers|guests|members)/i)
-    const budgetMatch = currentPrompt.match(/(?:budget|rs|inr|₹|under|around)?\s*(\d{4,7})\s*(?:rs|rupees|inr|k)?/i)
+
+    let parsedBudget = 47000
+    const kMatch = currentPrompt.match(/(\d+(?:\.\d+)?)\s*k/i)
+    if (kMatch) {
+      parsedBudget = Math.round(parseFloat(kMatch[1]) * 1000)
+    } else {
+      const budgetMatch = currentPrompt.match(/(?:budget|rs|inr|₹|under|around)?\s*(\d{4,7})/i)
+      if (budgetMatch) {
+        parsedBudget = parseInt(budgetMatch[1])
+      }
+    }
 
     const parsedDays   = daysMatch   ? parseInt(daysMatch[1])   : 4
     const parsedPeople = peopleMatch ? parseInt(peopleMatch[1]) : 4
-    const parsedBudget = budgetMatch ? parseInt(budgetMatch[1]) : parsedDays * 12500
     const perPerson    = Math.round(parsedBudget / parsedPeople)
 
     // ── Fake "thinking" delay — 2.5 s ──
@@ -550,7 +562,9 @@ export default function Destinations() {
       ],
       imageQuery: 'udaipur',
       img: 'https://images.unsplash.com/photo-1615836245337-f5b9b2303f10?w=900&h=1100&q=85&auto=format&fit=crop',
+      priceINR: perPerson,
       priceInINR: perPerson,
+      priceUSD: Math.round(perPerson / 85),
       priceInUSD: Math.round(perPerson / 85),
       priceDisplayINR: `₹${perPerson.toLocaleString('en-IN')}`,
       priceDisplayUSD: `$${Math.round(perPerson / 85).toLocaleString('en-US')}`,
@@ -574,7 +588,8 @@ export default function Destinations() {
         highlights: ['Vijay Stambha Sunrise', 'Kumbhalgarh Wall Hike', 'Rana Kumbha Palace', 'Light & Sound Show'],
         imageQuery: 'rajasthan',
         img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=900&h=1100&q=85&auto=format&fit=crop',
-        priceInINR: perPerson + 2000, priceInUSD: Math.round((perPerson + 2000) / 85),
+        priceINR: perPerson + 2000, priceInINR: perPerson + 2000,
+        priceUSD: Math.round((perPerson + 2000) / 85), priceInUSD: Math.round((perPerson + 2000) / 85),
         priceDisplayINR: `₹${(perPerson + 2000).toLocaleString('en-IN')}`,
         priceDisplayUSD: `$${Math.round((perPerson + 2000) / 85)}`,
         isIndia: true, isAiGenerated: true,
@@ -592,7 +607,8 @@ export default function Destinations() {
         highlights: ['Sam Sand Dunes Camel Trek', 'Jaisalmer Fort Sunrise', 'Luxury Desert Camp Night', 'Folk Music & Fire Show'],
         imageQuery: 'jaisalmer',
         img: 'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=900&h=1100&q=85&auto=format&fit=crop',
-        priceInINR: perPerson + 4000, priceInUSD: Math.round((perPerson + 4000) / 85),
+        priceINR: perPerson + 4000, priceInINR: perPerson + 4000,
+        priceUSD: Math.round((perPerson + 4000) / 85), priceInUSD: Math.round((perPerson + 4000) / 85),
         priceDisplayINR: `₹${(perPerson + 4000).toLocaleString('en-IN')}`,
         priceDisplayUSD: `$${Math.round((perPerson + 4000) / 85)}`,
         isIndia: true, isAiGenerated: true,
