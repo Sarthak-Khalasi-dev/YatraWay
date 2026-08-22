@@ -13,7 +13,7 @@ export default function Sidebar({ activeNav, setActiveNav }) {
             <path d="M9 18 12 12 15 18"/>
           </svg>
         </div>
-        <span className="text-[15px] font-semibold text-white tracking-[0.4px]">Wanderlust</span>
+        <span className="text-[15px] font-semibold text-white tracking-[0.4px]">YatraWay</span>
       </div>
 
       <nav className="flex flex-col gap-[3px] flex-1">

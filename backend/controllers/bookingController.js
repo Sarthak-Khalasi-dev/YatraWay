@@ -1,78 +1,65 @@
-const Booking = require('../models/bookingModel');
+// Standalone Booking Controller with in-memory store
+let bookingsStore = [
+  {
+    _id: 'b1',
+    type: 'FLIGHT',
+    name: 'Bangalore (BLR) → Denpasar (DPS)',
+    details: 'Garuda Indonesia · GA-841 · Economy · Seat 14A',
+    date: '20 May 2024 · 08:30 AM',
+    price: '₹34,500',
+    status: 'CONFIRMED'
+  },
+  {
+    _id: 'b2',
+    type: 'HOTEL',
+    name: 'The Kayon Jungle Resort, Ubud',
+    details: 'Valley Villa with Private Pool · 5 Nights · Breakfast Included',
+    date: '20 May - 25 May 2024',
+    price: '₹52,000',
+    status: 'CONFIRMED'
+  },
+  {
+    _id: 'b3',
+    type: 'ACTIVITY',
+    name: 'Nusa Penida Snorkeling & Manta Ray Tour',
+    details: 'Full Day Private Tour · Hotel Pickup & Equipment Included',
+    date: '23 May 2024 · 07:00 AM',
+    price: '₹6,200',
+    status: 'CONFIRMED'
+  }
+];
 
-// @desc    Get all user bookings
-// @route   GET /api/bookings
-// @access  Private
 const getBookings = async (req, res) => {
-  const bookings = await Booking.find({ user: req.user._id }).sort({ createdAt: -1 });
-  res.json(bookings);
+  res.json(bookingsStore);
 };
 
-// @desc    Create a new booking
-// @route   POST /api/bookings
-// @access  Private
 const createBooking = async (req, res) => {
-  const { type, name, details, date, price, status } = req.body;
-
-  const booking = new Booking({
-    user: req.user._id,
-    type,
-    name,
-    details,
-    date,
-    price,
-    status,
-  });
-
-  const createdBooking = await booking.save();
-  res.status(201).json(createdBooking);
+  const newBooking = {
+    _id: 'b_' + Date.now(),
+    ...req.body,
+  };
+  bookingsStore.unshift(newBooking);
+  res.status(201).json(newBooking);
 };
 
-// @desc    Update a booking
-// @route   PUT /api/bookings/:id
-// @access  Private
 const updateBooking = async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
-
-  if (!booking) {
+  const idx = bookingsStore.findIndex(b => b._id === req.params.id);
+  if (idx !== -1) {
+    bookingsStore[idx] = { ...bookingsStore[idx], ...req.body };
+    res.json(bookingsStore[idx]);
+  } else {
     res.status(404).json({ message: 'Booking not found' });
-    return;
   }
-
-  if (booking.user.toString() !== req.user._id.toString()) {
-    res.status(401).json({ message: 'Not authorized' });
-    return;
-  }
-
-  booking.type = req.body.type || booking.type;
-  booking.name = req.body.name || booking.name;
-  booking.details = req.body.details ?? booking.details;
-  booking.date = req.body.date ?? booking.date;
-  booking.price = req.body.price ?? booking.price;
-  booking.status = req.body.status || booking.status;
-
-  const updatedBooking = await booking.save();
-  res.json(updatedBooking);
 };
 
-// @desc    Delete a booking
-// @route   DELETE /api/bookings/:id
-// @access  Private
 const deleteBooking = async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
-
-  if (!booking) {
+  const idx = bookingsStore.findIndex(b => b._id === req.params.id);
+  if (idx !== -1) {
+    bookingsStore.splice(idx, 1);
+    res.json({ message: 'Booking removed' });
+  } else {
     res.status(404).json({ message: 'Booking not found' });
-    return;
   }
-
-  if (booking.user.toString() !== req.user._id.toString()) {
-    res.status(401).json({ message: 'Not authorized' });
-    return;
-  }
-
-  await booking.deleteOne();
-  res.json({ message: 'Booking removed' });
 };
 
 module.exports = {

@@ -5,6 +5,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { login, register, loginDemo, clearError } from '../store/slices/authSlice'
 import { useToast } from '../context/ToastContext'
+import { useAuth } from '../context/AuthContext'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './LoginPage.css'
 
@@ -47,6 +48,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const toast = useToast()
+  const { signInWithOAuth } = useAuth()
   usePageTitle('Sign In')
 
   const { userInfo, loading, error } = useSelector((state) => state.auth)
@@ -89,7 +91,7 @@ export default function LoginPage() {
       } else {
         const result = await dispatch(register({ name: values.name, email: values.email, password: values.password }))
         if (register.fulfilled.match(result)) {
-          toast.success('Account created! Welcome to NomadNest 🌍')
+          toast.success('Account created! Welcome to YatraWay 🌍')
         }
       }
     },
@@ -127,7 +129,7 @@ export default function LoginPage() {
               <polygon points="3 18 12 2 21 18"/><path d="M9 18 12 12 15 18"/>
             </svg>
           </div>
-          <div className="logo-text"><span className="logo-name">NOMADNEST</span><span className="logo-sub">TRAVEL</span></div>
+          <div className="logo-text"><span className="logo-name">YATRAWAY</span><span className="logo-sub">TRAVEL</span></div>
         </div>
         <div className="hero-content">
           <div className="hero-tag">✦ Premium Travel Experience</div>
@@ -154,7 +156,7 @@ export default function LoginPage() {
           </div>
 
           <div className="auth-heading">
-            <h2 className="auth-title">{tab === 'signin' ? 'Welcome back! 👋' : 'Join NomadNest 🌍'}</h2>
+            <h2 className="auth-title">{tab === 'signin' ? 'Welcome back! 👋' : 'Join YatraWay 🌍'}</h2>
             <p className="auth-subtitle">{tab === 'signin' ? 'Sign in to continue your journey' : 'Create your free account today'}</p>
           </div>
 
@@ -225,8 +227,8 @@ export default function LoginPage() {
 
             <div className="or-divider"><span>or continue with</span></div>
             <div className="social-row">
-              <button type="button" className="social-btn"><GoogleIcon /><span>Google</span></button>
-              <button type="button" className="social-btn"><AppleIcon /><span>Apple</span></button>
+              <button type="button" onClick={() => signInWithOAuth('google')} className="social-btn"><GoogleIcon /><span>Google</span></button>
+              <button type="button" onClick={() => signInWithOAuth('apple')} className="social-btn"><AppleIcon /><span>Apple</span></button>
             </div>
           </form>
 

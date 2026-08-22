@@ -1,8 +1,10 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { useAuth } from '../context/AuthContext'
 
 export default function ProtectedRoute({ children }) {
-  const { userInfo, loading } = useSelector((state) => state.auth)
+  const { userInfo } = useSelector((state) => state.auth)
+  const { currentUser, loading } = useAuth()
   const location = useLocation()
 
   if (loading) {
@@ -21,7 +23,9 @@ export default function ProtectedRoute({ children }) {
     )
   }
 
-  if (!userInfo) {
+  const activeUser = currentUser || userInfo
+
+  if (!activeUser) {
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
