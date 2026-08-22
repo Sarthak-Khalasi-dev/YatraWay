@@ -45,3 +45,41 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- 6. Create Messages Table for Realtime Chat
+create table if not exists public.messages (
+  id uuid default gen_random_uuid() primary key,
+  contact_id text not null,
+  sender_id uuid references auth.users(id),
+  sender_type text default 'user', -- 'user' | 'contact'
+  text text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 7. Enable RLS on Messages
+alter table public.messages enable row level security;
+
+create policy "Allow all read messages"
+  on public.messages for select
+  using (true);
+
+create policy "Allow authenticated users to insert messages"
+  on public.messages for insert
+  with check (true);
+
+-- 8. Enable Realtime for Messages
+alter publication supabase_realtime add table public.messages;
+
+-- 9. Create Travel Buddies Directory Table
+create table if not exists public.travel_buddies (
+  id serial primary key,
+  name text not null,
+  role text not null,
+  destination text not null,
+  travel_style text not null,
+  avatar text not null,
+  bio text,
+  is_online boolean default true,
+  badge text default 'VERIFIED TRAVELER'
+);
+

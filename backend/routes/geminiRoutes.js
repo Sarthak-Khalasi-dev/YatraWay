@@ -376,4 +376,39 @@ Format strictly JSON object with keys:
   }
 });
 
+// @route   POST /api/gemini/concierge-reply
+// @desc    Generate personalized, luxury concierge responses
+// @access  Public
+router.post('/concierge-reply', async (req, res) => {
+  try {
+    const { message, contactName, history } = req.body;
+    const userMsg = message || 'Hello concierge';
+
+    const systemPrompt = `You are the lead travel concierge for YatraWay, an elite luxury travel platform.
+Provide an elegant, polite, ultra-helpful response (2-3 sentences max) assisting the traveler with their booking, itinerary, restaurant reservations, early check-in, weather advisory, or travel logistics.
+Return valid JSON: { "reply": "string" }`;
+
+    let replyText = null;
+    try {
+      const data = await callGroqAI(systemPrompt, `Traveler asks: "${userMsg}" (Recipient: ${contactName || 'YatraWay Concierge'})`);
+      if (data && data.reply) replyText = data.reply;
+    } catch (e) {
+      console.warn('Groq Concierge error:', e.message);
+    }
+
+    if (!replyText) {
+      replyText = `Certainly! I have noted your request regarding "${userMsg.substring(0, 30)}..." and our on-ground luxury coordination team is ensuring all arrangements are confirmed.`;
+    }
+
+    res.json({ success: true, reply: replyText });
+  } catch (err) {
+    console.error('Concierge reply error:', err);
+    res.json({
+      success: true,
+      reply: 'Your private concierge has received your request and is coordinating with our luxury partners.',
+    });
+  }
+});
+
 module.exports = router;
+
