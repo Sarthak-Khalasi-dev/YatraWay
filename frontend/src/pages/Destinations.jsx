@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import api from '../services/api'
 import './Destinations.css'
@@ -373,13 +373,20 @@ const INITIAL_DESTINATIONS = [
 
 export default function Destinations() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   // ── Currency State (INR / USD) ──
   const [currency, setCurrency] = useState('INR') // Default INR as requested
 
   // ── Core Filters ──
   const [destList, setDestList] = useState(INITIAL_DESTINATIONS)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(location.state?.search || '')
+
+  useEffect(() => {
+    if (location.state?.search) {
+      setSearch(location.state.search)
+    }
+  }, [location.state])
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeTags, setActiveTags] = useState(['ADVENTURE', 'CULTURE', 'HERITAGE', 'WELLNESS', 'COASTAL'])
   const [budgetMax, setBudgetMax] = useState(150000) // in INR default
