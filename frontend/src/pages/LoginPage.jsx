@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useFormik } from 'formik'
+import { motion, AnimatePresence } from 'framer-motion'
 import * as Yup from 'yup'
 import { login, register, loginDemo, clearError } from '../store/slices/authSlice'
 import { useToast } from '../context/ToastContext'
@@ -148,8 +149,18 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="auth-panel">
-        <div className="auth-card">
+      <motion.div
+        className="auth-panel"
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 26, delay: 0.12 }}
+      >
+        <motion.div
+          className="auth-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.2 }}
+        >
           <div className="tabs">
             <button className={`tab-btn ${tab === 'signin' ? 'active' : ''}`} onClick={() => switchTab('signin')}>Sign In</button>
             <button className={`tab-btn ${tab === 'signup' ? 'active' : ''}`} onClick={() => switchTab('signup')}>Register</button>
@@ -236,8 +247,8 @@ export default function LoginPage() {
             {tab === 'signin' ? "Don't have an account? " : 'Already have an account? '}
             <button type="button" className="footer-link" onClick={() => switchTab(tab === 'signin' ? 'signup' : 'signin')}>{tab === 'signin' ? 'Create one' : 'Sign in'}</button>
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

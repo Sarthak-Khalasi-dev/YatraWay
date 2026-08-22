@@ -1,9 +1,25 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import api from '../services/api'
 import { SparkleIcon, IndiaIcon, MountainIcon, WaveIcon, MonumentIcon, LeafIcon, GlobeIcon, CalendarIcon, ShieldIcon, CompassIcon, MapPinIcon } from '../components/icons/LuxuryIcons'
 import './Destinations.css'
+
+/* ── Animation Variants ── */
+const staggerGrid = {
+  animate: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
+}
+const cardEnter = {
+  initial: { opacity: 0, y: 28, scale: 0.96 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 310, damping: 25 } },
+  exit:    { opacity: 0, y: -10, scale: 0.97, transition: { duration: 0.18 } },
+}
+const spotlightEnter = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] } },
+  exit:    { opacity: 0, y: -16, transition: { duration: 0.22 } },
+}
 
 // ── Comprehensive Curated Destinations (Heavy India Focus + World Classics) ──
 const INITIAL_DESTINATIONS = [
@@ -901,8 +917,9 @@ export default function Destinations() {
             {/* ── RIGHT COLUMN: CURATED ESCAPES ── */}
             <main className="curated-main">
               {/* ── AI SPOTLIGHT HERO SHOWCASE (When AI generates tailored itinerary) ── */}
+              <AnimatePresence>
               {aiSpotlight && (
-                <section className="ai-spotlight-card">
+                <motion.section className="ai-spotlight-card" variants={spotlightEnter} initial="initial" animate="animate" exit="exit">
                   <div className="asc-img-wrap">
                     <img src={aiSpotlight.img} alt={aiSpotlight.name} className="asc-img" />
                     <div className="asc-badge-floating">
@@ -977,8 +994,9 @@ export default function Destinations() {
                       </button>
                     </div>
                   </div>
-                </section>
+                </motion.section>
               )}
+              </AnimatePresence>
 
               {/* Header Title + Subtitle + Sort Dropdown */}
               <div className="curated-header">
@@ -1008,11 +1026,17 @@ export default function Destinations() {
               </div>
 
               {/* Destination Cards 3-Column Grid */}
-              <div className="curated-grid">
+              <motion.div
+                className="curated-grid"
+                variants={staggerGrid}
+                initial="animate"
+                animate="animate"
+                key={activeCategory + activeTags.join('') + sortOption}
+              >
                 {visibleDestinations.map((dest) => {
                   const isHearted = liked[dest.id]
                   return (
-                    <article key={dest.id} className="escape-card" onClick={() => setSelectedModalDest(dest)}>
+                    <motion.article key={dest.id} className="escape-card" variants={cardEnter} whileHover={{ y: -7, scale: 1.015 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 340, damping: 22 }} onClick={() => setSelectedModalDest(dest)}>
                       {/* Image Frame */}
                       <div className="escape-img-container">
                         <img src={dest.img} alt={dest.name} className="escape-img" loading="lazy" />
@@ -1091,10 +1115,10 @@ export default function Destinations() {
                           <span className="escape-btn-arrow">→</span>
                         </button>
                       </div>
-                    </article>
+                    </motion.article>
                   )
                 })}
-              </div>
+              </motion.div>
 
               {/* No Results Fallback */}
               {filtered.length === 0 && (
@@ -1132,9 +1156,24 @@ export default function Destinations() {
       </div>
 
       {/* ── EXPEDITION DETAILS MODAL ── */}
+      <AnimatePresence>
       {selectedModalDest && (
-        <div className="dest-modal-backdrop" onClick={() => setSelectedModalDest(null)}>
-          <div className="dest-modal-card" onClick={(e) => e.stopPropagation()}>
+        <motion.div
+          className="dest-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          onClick={() => setSelectedModalDest(null)}
+        >
+          <motion.div
+            className="dest-modal-card"
+            initial={{ opacity: 0, scale: 0.92, y: 28 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <button className="dest-modal-close" onClick={() => setSelectedModalDest(null)}>
               ✕
             </button>
@@ -1202,9 +1241,10 @@ export default function Destinations() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }
