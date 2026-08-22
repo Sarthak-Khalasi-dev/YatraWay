@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import { login, register, clearError } from '../store/slices/authSlice'
+import { login, register, loginDemo, clearError } from '../store/slices/authSlice'
 import { useToast } from '../context/ToastContext'
 import { usePageTitle } from '../hooks/usePageTitle'
 import './LoginPage.css'
@@ -102,9 +102,13 @@ export default function LoginPage() {
     setShowPass(false); setShowConf(false)
   }
 
-  const fillDemo = () => {
+  const fillDemo = async () => {
     formik.setFieldValue('email', 'ananya@example.com')
     formik.setFieldValue('password', 'password123')
+    const result = await dispatch(loginDemo())
+    if (loginDemo.fulfilled.match(result)) {
+      toast.success('Welcome back, Ananya! 👋 Logged in as Demo User')
+    }
   }
 
   return (
