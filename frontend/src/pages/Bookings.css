@@ -87,30 +87,36 @@
 }
 
 /* ── 2. Logistics Hero Banner ── */
+/* ── 2. Logistics Hero Banner ── */
 .bk-hero-logistics-banner {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: #18181B;
   color: #FFFFFF;
-  border-radius: 10px;
-  padding: 36px 44px;
+  border-radius: 12px;
+  padding: 32px 40px;
   gap: 36px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  flex-shrink: 0;
+  min-height: 220px;
 }
 
 .bhl-left-info {
   flex: 1.3;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
 }
 
 .bhl-tag {
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #C9963A;
+  color: #D4A843;
 }
 
 .bhl-title {
@@ -119,20 +125,22 @@
   font-weight: 700;
   color: #FFFFFF;
   line-height: 1.15;
+  margin: 0;
 }
 
 .bhl-desc {
-  font-size: 13px;
+  font-size: 13.5px;
   color: rgba(255, 255, 255, 0.75);
   line-height: 1.55;
   max-width: 520px;
+  margin: 0;
 }
 
 .bhl-actions {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .bhl-btn-primary {
@@ -143,10 +151,10 @@
   color: #18181B;
   border: none;
   padding: 10px 22px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -159,50 +167,84 @@
 .bhl-btn-secondary {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #FFFFFF;
   padding: 10px 20px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bhl-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .bhl-right-quick-pills {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
+  min-width: 280px;
+  flex-shrink: 0;
 }
 
 .bhl-quick-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
-  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 16px;
+  transition: all 0.2s ease;
 }
 
-.bqc-icon {
-  font-size: 18px;
+.bhl-quick-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(212, 168, 67, 0.3);
+}
+
+.bqc-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bqc-icon-box.dark {
+  background: #27272A;
+  color: #FFFFFF;
+}
+
+.bqc-icon-box.gold {
+  background: rgba(212, 168, 67, 0.15);
+  color: #D4A843;
+}
+
+.bqc-icon-box.blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60A5FA;
 }
 
 .bqc-label {
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #C9963A;
+  color: #D4A843;
   display: block;
 }
 
 .bqc-val {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #FFFFFF;
   font-weight: 600;
   margin-top: 2px;
