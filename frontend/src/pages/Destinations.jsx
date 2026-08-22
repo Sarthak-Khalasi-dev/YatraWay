@@ -452,13 +452,70 @@ export default function Destinations() {
   }
 
   // ── YatraWay AI Destination Generator Handler ──
+  // ── Smart Travel Intent Detection ──
+  const isTravelQuery = (text) => {
+    const t = text.toLowerCase().trim()
+
+    // Pure greetings & casual non-travel messages — return false
+    const greetings = ['hey', 'heyy', 'heyyy', 'hi', 'hello', 'hii', 'hiii', 'yo', 'sup', 'howdy', 'whats up', 'what\'s up', 'ok', 'okay', 'thanks', 'thank you', 'bye', 'goodbye', 'lol', 'haha', 'nice', 'cool', 'wow', 'great', 'good', 'test', 'testing']
+    if (greetings.some(g => t === g || t === g + '!' || t === g + '?')) return false
+
+    // Must contain at least one travel signal to be treated as a query
+    const travelSignals = [
+      // Places
+      'jaipur','delhi','mumbai','goa','kerala','ladakh','kashmir','rajasthan','manali','shimla','rishikesh','varanasi','agra','bangalore','hyderabad','kolkata','pune','udaipur','spiti','meghalaya','andaman','ooty','coorg','leh','hampi','mysore','darjeeling','sikkim','arunachal','mizoram','bali','thailand','paris','london','dubai','singapore','maldives','switzerland','japan','italy','greece','turkey',
+      // Trip keywords
+      'trip','travel','visit','tour','vacation','holiday','itinerary','plan','book','budget','days','nights','people','person','travelers','explore','destination','place','escape','journey','trek','hike','beach','mountain','heritage','culture','wellness',
+      // Budget signals
+      '₹','rs','inr','usd','$','k budget','budget','spend',
+      // Time signals
+      'days','nights','week','weekend','month',
+    ]
+    return travelSignals.some(signal => t.includes(signal))
+  }
+
+  // ── Concierge-style fallback reply for casual/greeting messages ──
+  const getCasualReply = (text) => {
+    const t = text.toLowerCase().trim()
+    if (['hey','heyy','heyyy','hi','hii','hiii','hello'].some(g => t.startsWith(g))) {
+      return `Hello! I'm your YatraWay AI Concierge. Where would you like to travel? Tell me a destination, your budget, and number of days — I'll curate a bespoke itinerary for you.`
+    }
+    if (t.includes('thanks') || t.includes('thank you')) {
+      return `You're most welcome! Feel free to ask anytime — I'm here to craft your perfect journey.`
+    }
+    if (t.includes('bye') || t.includes('goodbye')) {
+      return `Safe travels! Come back whenever you're ready to plan your next adventure. ✈️`
+    }
+    return `I'm your luxury travel concierge — share a destination, budget, or trip idea and I'll curate a personalized plan just for you!`
+  }
+
   const handleGenerateAI = async (e) => {
     e?.preventDefault()
     if (!aiPrompt.trim()) return
 
     const currentPrompt = aiPrompt.trim()
-    setIsGeneratingAI(true)
     setAiError('')
+
+    // Add user message to conversation history immediately
+    const userMsg = { id: Date.now(), sender: 'user', text: currentPrompt }
+    setChatHistory((prev) => [...prev, userMsg])
+    setAiPrompt('')
+
+    // ── INTENT CHECK: Is this a real travel query? ──
+    if (!isTravelQuery(currentPrompt)) {
+      // Respond like a concierge, NOT with a destination card
+      const casualReply = getCasualReply(currentPrompt)
+      setTimeout(() => {
+        setChatHistory((prev) => [
+          ...prev,
+          { id: Date.now() + 1, sender: 'ai', text: casualReply },
+        ])
+      }, 400) // small delay feels more natural
+      return
+    }
+
+    // ── It's a real travel query — proceed with AI generation ──
+    setIsGeneratingAI(true)
 
     // Parse user input for metadata (days, people, budget)
     const daysMatch = currentPrompt.match(/(\d+)\s*(?:day|days|d|nights)/i)
@@ -469,10 +526,6 @@ export default function Destinations() {
     const parsedPeople = peopleMatch ? parseInt(peopleMatch[1]) : 4
     const parsedBudget = budgetMatch ? parseInt(budgetMatch[1]) : (parsedDays * 12500)
     const perPerson = Math.round(parsedBudget / parsedPeople)
-
-    // Add user message to conversation history
-    const userMsg = { id: Date.now(), sender: 'user', text: currentPrompt }
-    setChatHistory((prev) => [...prev, userMsg])
 
     try {
       const response = await api.post('/gemini/generate-destinations', {
@@ -496,15 +549,14 @@ export default function Destinations() {
         setAiSpotlight(primarySpotlight)
         setAiSearchTag(currentPrompt)
         setDestList((prev) => [...newDestinations, ...prev.filter((p) => !newDestinations.some((n) => n.id === p.id))])
-        
+
         // Add AI response to chat history
         const aiMsg = {
           id: Date.now() + 1,
           sender: 'ai',
-          text: `I have curated a personalized ${parsedDays}-day royal escape for ${parsedPeople} travelers with a total budget of ₹${parsedBudget.toLocaleString('en-IN')} (~₹${perPerson.toLocaleString('en-IN')}/person). Review your tailored spotlight itinerary below, or refine your plan directly in our interactive customizer.`,
+          text: `I've curated a personalized ${parsedDays}-day escape for ${parsedPeople} travelers at a total budget of ₹${parsedBudget.toLocaleString('en-IN')} (~₹${perPerson.toLocaleString('en-IN')}/person). Your tailored spotlight is ready below — refine it further or jump straight into the trip builder.`,
         }
         setChatHistory((prev) => [...prev, aiMsg])
-        setAiPrompt('')
         setShowAllJourneys(true)
 
         setTimeout(() => {
@@ -512,8 +564,12 @@ export default function Destinations() {
         }, 100)
       }
     } catch (err) {
-      console.error('Groq AI error:', err)
-      setAiError('Unable to generate with AI. Fallback loaded.')
+      console.error('AI generation error:', err)
+      setChatHistory((prev) => [
+        ...prev,
+        { id: Date.now() + 1, sender: 'ai', text: 'I encountered a brief issue. Please try rephrasing your travel request — for example: "Jaipur for 4 days, 2 people, ₹30,000 budget".' },
+      ])
+      setAiError('Unable to generate with AI. Please try again.')
     } finally {
       setIsGeneratingAI(false)
     }
