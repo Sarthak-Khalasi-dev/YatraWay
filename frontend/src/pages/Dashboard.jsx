@@ -472,7 +472,7 @@ export default function Dashboard() {
 
             <div className="nl-stamp-right">
               <div className="vintage-seal-circle">
-                <span>WANDERLUST</span>
+                <span>YATRAWAY</span>
                 <span>TRAVEL</span>
                 <span>III</span>
               </div>

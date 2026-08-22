@@ -288,7 +288,7 @@ export default function Profile() {
                   </p>
                   <button
                     className="prof-gopro-btn"
-                    onClick={() => toast.success('👑 Welcome to Wanderlust Pro Concierge Access!')}
+                    onClick={() => toast.success('👑 Welcome to YatraWay Pro Concierge Access!')}
                   >
                     <span>UPGRADE NOW</span>
                     <span>→</span>

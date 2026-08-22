@@ -235,7 +235,7 @@ export default function Settings() {
                   <div className="sb-logo-mark" style={{ width:56, height:56, borderRadius:16, margin:'0 auto 16px', display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,var(--charcoal),var(--charcoal-2))' }}>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 18 12 2 21 18"/><path d="M9 18 12 12 15 18"/></svg>
                   </div>
-                  <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:700, color:'var(--text-1)', marginBottom:4 }}>NomadNest</h2>
+                  <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:700, color:'var(--text-1)', marginBottom:4 }}>YatraWay</h2>
                   <p style={{ color:'var(--text-3)', fontSize:13, marginBottom:6 }}>Version 2.0.0 · Built with ❤️</p>
                   <p style={{ color:'var(--text-3)', fontSize:13 }}>Your ultimate travel companion</p>
                   <div style={{ display:'flex', gap:12, justifyContent:'center', marginTop:24, flexWrap:'wrap' }}>

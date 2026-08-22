@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GoogleIcon, AppleIcon, EyeIcon, MailIcon, LockIcon, UserIcon } from '../icons/AuthIcons'
+import { useAuth } from '../../context/AuthContext'
 
 export default function AuthForm() {
   const navigate = useNavigate()
+  const { signIn, signUp, signInWithOAuth } = useAuth()
+
   const [tab, setTab] = useState('signin')
   const [showPass, setShowPass] = useState(false)
   const [showConfirmPass, setShowConfirmPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   const [form, setForm] = useState({
     email: '',
@@ -16,13 +20,38 @@ export default function AuthForm() {
     confirmPassword: ''
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setErrorMsg('')
+
+    if (tab === 'signup' && form.password !== form.confirmPassword) {
+      setErrorMsg('Passwords do not match.')
+      return
+    }
+
     setLoading(true)
-    setTimeout(() => {
+
+    try {
+      if (tab === 'signup') {
+        const res = await signUp(form.name, form.email, form.password)
+        if (res?.success) {
+          navigate('/dashboard')
+        } else {
+          setErrorMsg(res?.error || 'Failed to create account.')
+        }
+      } else {
+        const res = await signIn(form.email, form.password)
+        if (res?.success) {
+          navigate('/dashboard')
+        } else {
+          setErrorMsg(res?.error || 'Invalid login credentials.')
+        }
+      }
+    } catch (err) {
+      setErrorMsg(err.message || 'An error occurred.')
+    } finally {
       setLoading(false)
-      navigate('/dashboard')
-    }, 1500)
+    }
   }
 
   const handleTabChange = (newTab) => {
@@ -30,6 +59,7 @@ export default function AuthForm() {
     setForm({ email: '', password: '', name: '', confirmPassword: '' })
     setShowPass(false)
     setShowConfirmPass(false)
+    setErrorMsg('')
   }
 
   return (
@@ -63,6 +93,13 @@ export default function AuthForm() {
               : 'Create an account to begin your journey.'}
           </p>
         </div>
+
+        {/* Error Notification Banner if present */}
+        {errorMsg && (
+          <div className="mb-[15px] p-[10px_14px] bg-red-50 border border-red-200 text-red-600 rounded-[12px] text-[13px]">
+            {errorMsg}
+          </div>
+        )}
 
         {/* Form */}
         <form className="flex flex-col gap-[15px]" onSubmit={handleSubmit}>
@@ -174,11 +211,11 @@ export default function AuthForm() {
 
           {/* Social */}
           <div className="grid grid-cols-2 gap-[12px]">
-            <button type="button" className="flex items-center justify-center gap-[9px] p-[12px_16px] bg-white border-[1.5px] border-border rounded-[13px] text-[14px] font-medium font-body text-text-dark cursor-pointer transition-all duration-200 tracking-[0.1px] hover:bg-cream hover:border-black/15 hover:-translate-y-[1px] hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)] active:translate-y-0">
+            <button type="button" onClick={() => signInWithOAuth('google')} className="flex items-center justify-center gap-[9px] p-[12px_16px] bg-white border-[1.5px] border-border rounded-[13px] text-[14px] font-medium font-body text-text-dark cursor-pointer transition-all duration-200 tracking-[0.1px] hover:bg-cream hover:border-black/15 hover:-translate-y-[1px] hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)] active:translate-y-0">
               <GoogleIcon />
               <span>Google</span>
             </button>
-            <button type="button" className="flex items-center justify-center gap-[9px] p-[12px_16px] bg-white border-[1.5px] border-border rounded-[13px] text-[14px] font-medium font-body text-text-dark cursor-pointer transition-all duration-200 tracking-[0.1px] hover:bg-cream hover:border-black/15 hover:-translate-y-[1px] hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)] active:translate-y-0">
+            <button type="button" onClick={() => signInWithOAuth('apple')} className="flex items-center justify-center gap-[9px] p-[12px_16px] bg-white border-[1.5px] border-border rounded-[13px] text-[14px] font-medium font-body text-text-dark cursor-pointer transition-all duration-200 tracking-[0.1px] hover:bg-cream hover:border-black/15 hover:-translate-y-[1px] hover:shadow-[0_4px_14px_rgba(0,0,0,0.07)] active:translate-y-0">
               <AppleIcon />
               <span>Apple</span>
             </button>
