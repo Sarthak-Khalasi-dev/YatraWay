@@ -330,9 +330,12 @@ export default function Dashboard() {
                     <polygon points="80,150 140,60 200,150" fill="#E5DFD5" opacity="0.7" />
                   </svg>
                 </div>
-                <p className="adv-quote-text">
-                  "Life is short<br />and the world is<br />wide."
-                </p>
+                <div className="adv-quote-wrapper">
+                  <p className="adv-quote-text">
+                    "One day you'll leave this world behind<br />so live a life you will remember."
+                  </p>
+                  <span className="adv-quote-author">~ The Nights</span>
+                </div>
               </div>
             </div>
           </section>
@@ -410,7 +413,7 @@ export default function Dashboard() {
 
             <div className="db-blog-grid">
               <div className="blog-article-card" onClick={() => navigate('/experiences')}>
-                <img src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=400&h=280&q=80&auto=format&fit=crop" alt="Cappadocia" className="blog-card-img" />
+                <img src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600&h=400&q=85&auto=format&fit=crop" alt="Cappadocia" className="blog-card-img" />
                 <div className="blog-card-body">
                   <h4 className="blog-card-title">A Complete Guide to Cappadocia</h4>
                   <p className="blog-card-desc">Discover the magical land of hot air balloons.</p>
@@ -419,7 +422,7 @@ export default function Dashboard() {
               </div>
 
               <div className="blog-article-card" onClick={() => navigate('/experiences')}>
-                <img src="https://images.unsplash.com/photo-1533104182429-4b31e8ae3e9e?w=400&h=280&q=80&auto=format&fit=crop" alt="Coastal Towns" className="blog-card-img" />
+                <img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=600&h=400&q=85&auto=format&fit=crop" alt="Coastal Towns" className="blog-card-img" />
                 <div className="blog-card-body">
                   <h4 className="blog-card-title">10 Most Beautiful Coastal Towns</h4>
                   <p className="blog-card-desc">Stunning views and relaxing vibes.</p>
@@ -428,7 +431,7 @@ export default function Dashboard() {
               </div>
 
               <div className="blog-article-card" onClick={() => navigate('/experiences')}>
-                <img src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=400&h=280&q=80&auto=format&fit=crop" alt="Hidden Gems in Asia" className="blog-card-img" />
+                <img src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&h=400&q=85&auto=format&fit=crop" alt="Hidden Gems in Asia" className="blog-card-img" />
                 <div className="blog-card-body">
                   <h4 className="blog-card-title">Top 7 Hidden Gems in Asia</h4>
                   <p className="blog-card-desc">Offbeat places you must explore.</p>
