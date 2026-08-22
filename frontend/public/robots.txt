@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nomadnest.vercel.app/sitemap.xml
