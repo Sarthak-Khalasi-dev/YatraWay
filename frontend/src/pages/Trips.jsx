@@ -172,13 +172,72 @@ export default function Trips() {
     }
   }
 
-  const filtered = trips.filter(t => tab === 'All' || t.status === tab)
+  const displayTrips = trips.length > 0 ? trips : [
+    {
+      _id: 'trip_demo_1',
+      dest: 'Bali, Indonesia',
+      status: 'Upcoming',
+      dates: '20 May — 02 Jun 2024',
+      days: 12,
+      progress: 80,
+      budget: '₹55,000',
+      spent: '₹38,500',
+      members: 2,
+      img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&q=80&auto=format&fit=crop',
+      activities: ['Ubud Villa Stay', 'Sacred Monkey Forest', 'Seminyak Beach Club'],
+      notes: 'Private airport driver booked with Komaneka resort.',
+    },
+    {
+      _id: 'trip_demo_2',
+      dest: 'Swiss Alps Expedition',
+      status: 'Upcoming',
+      dates: '05 Jul — 15 Jul 2024',
+      days: 10,
+      progress: 30,
+      budget: '₹1,50,000',
+      spent: '₹45,000',
+      members: 2,
+      img: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=600&h=400&q=80&auto=format&fit=crop',
+      activities: ['Matterhorn Hike', 'Glacier Express', 'Alpine Fondue'],
+      notes: 'Ensure thermal jackets are packed.',
+    },
+    {
+      _id: 'trip_demo_3',
+      dest: 'Ladakh High-Pass Trek',
+      status: 'Wishlist',
+      dates: '10 Aug — 20 Aug 2024',
+      days: 8,
+      progress: 15,
+      budget: '₹45,000',
+      spent: '₹0',
+      members: 3,
+      img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&h=400&q=80&auto=format&fit=crop',
+      activities: ['Pangong Tso Stargazing', 'Khardung La Pass', 'Thiksey Monastery'],
+      notes: 'Acclimatization day in Leh is mandatory.',
+    },
+    {
+      _id: 'trip_demo_4',
+      dest: 'Kerala Backwaters & Tea Gardens',
+      status: 'Completed',
+      dates: '12 Jan — 18 Jan 2024',
+      days: 7,
+      progress: 100,
+      budget: '₹38,000',
+      spent: '₹36,200',
+      members: 2,
+      img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&h=400&q=80&auto=format&fit=crop',
+      activities: ['Alleppey Houseboat', 'Munnar Tea Estate', 'Kathakali Show'],
+      notes: 'Incredible Ayurvedic massages and seafood.',
+    },
+  ]
+
+  const filtered = displayTrips.filter(t => tab === 'All' || t.status === tab)
 
   const SUMMARY = [
-    { label: 'Total Trips',   value: trips.length,                                     icon: '✈️' },
-    { label: 'Upcoming',      value: trips.filter(t=>t.status==='Upcoming').length,     icon: '🗓️' },
-    { label: 'Completed',     value: trips.filter(t=>t.status==='Completed').length,    icon: '✅' },
-    { label: 'Wishlist',      value: trips.filter(t=>t.status==='Wishlist').length,     icon: '❤️' },
+    { label: 'Total Trips',   value: displayTrips.length,                                     icon: '✈️' },
+    { label: 'Upcoming',      value: displayTrips.filter(t=>t.status==='Upcoming').length,     icon: '🗓️' },
+    { label: 'Completed',     value: displayTrips.filter(t=>t.status==='Completed').length,    icon: '✅' },
+    { label: 'Wishlist',      value: displayTrips.filter(t=>t.status==='Wishlist').length,     icon: '❤️' },
   ]
 
   return (
@@ -211,7 +270,7 @@ export default function Trips() {
 
           <div className="trip-tabs">
             {TABS.map(t => (
-              <button key={t} className={`trip-tab ${tab===t?'trip-tab--on':''}`} onClick={() => setTab(t)}>{t}<span className="trip-tab-count">{t==='All' ? trips.length : trips.filter(x=>x.status===t).length}</span></button>
+              <button key={t} className={`trip-tab ${tab===t?'trip-tab--on':''}`} onClick={() => setTab(t)}>{t}<span className="trip-tab-count">{t==='All' ? displayTrips.length : displayTrips.filter(x=>x.status===t).length}</span></button>
             ))}
           </div>
 

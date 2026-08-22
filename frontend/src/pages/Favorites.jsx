@@ -21,25 +21,26 @@ export default function Favorites() {
     setFavs(favsStore.getAll())
   }
 
+  const displayFavs = favs.length > 0 ? favs : [
+    { id: 'fav_1', name: 'Ladakh High-Pass & Pangong Oasis', country: 'India', rating: 4.9, price: '₹45,000', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&h=400&q=80&auto=format&fit=crop', note: 'Milky Way stargazing and monastery trails' },
+    { id: 'fav_2', name: 'Swiss Alps Expedition', country: 'Switzerland', rating: 4.9, price: '₹1,50,000', img: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=600&h=400&q=80&auto=format&fit=crop', note: 'Matterhorn alpine chalet retreat' },
+    { id: 'fav_3', name: 'Kyoto Heritage Trail', country: 'Japan', rating: 5.0, price: '₹1,30,000', img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&h=400&q=80&auto=format&fit=crop', note: 'Ancient shrines & bamboo groves' },
+    { id: 'fav_4', name: 'Kerala Backwaters Houseboat', country: 'India', rating: 5.0, price: '₹38,000', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&h=400&q=80&auto=format&fit=crop', note: 'Solar houseboat & Ayurvedic wellness' },
+  ]
+
   return (
     <div className={`pg-root ${mounted ? 'pg-on' : ''}`}>
       <Sidebar />
       <div className="pg-main">
         <header className="pg-header">
           <div>
-            <h1 className="pg-title">Favorites ❤️</h1>
-            <p className="pg-sub">{favs.length} destinations you love</p>
+            <h1 className="pg-title">Favorites</h1>
+            <p className="pg-sub">{displayFavs.length} curated destinations you love</p>
           </div>
         </header>
         <div className="pg-scroll" style={{ padding:'20px 24px 32px' }}>
-          {favs.length === 0 && (
-            <div className="no-results" style={{ paddingTop:80 }}>
-              <span style={{ fontSize:52 }}>💔</span>
-              <p>No favorites yet — start exploring!</p>
-            </div>
-          )}
           <div className="fav-grid">
-            {favs.map((f, i) => (
+            {displayFavs.map((f, i) => (
               <div className="fav-card" key={f.id || f.name} style={{ animationDelay:`${i*0.07}s` }}>
                 <div className="fav-img-wrap">
                   <img src={f.img} alt={f.name} className="fav-img" />
@@ -55,7 +56,6 @@ export default function Favorites() {
                     <div className="dest-rating"><StarFill /><span className="dest-score">{f.rating}</span></div>
                     <p className="dest-price">{f.price}</p>
                   </div>
-                  <button className="trip-view-btn" style={{ marginTop:10 }}>Plan This Trip →</button>
                 </div>
               </div>
             ))}

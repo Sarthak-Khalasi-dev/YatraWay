@@ -116,8 +116,8 @@ function generateId() {
 /* ── CRUD factory ── */
 function useCRUD(namespace, userId, defaults) {
   const load = useCallback(() => {
-    if (!userId) return []
-    return loadData(namespace, userId, defaults)
+    const effectiveId = userId || 'default_explorer'
+    return loadData(namespace, effectiveId, defaults)
   }, [namespace, userId, defaults])
 
   const getAll = useCallback(() => load(), [load])
@@ -149,7 +149,7 @@ function useCRUD(namespace, userId, defaults) {
 /* ── Provider ── */
 export function StorageProvider({ children }) {
   const { userInfo } = useSelector((state) => state.auth)
-  const userId = userInfo?._id
+  const userId = userInfo?._id || 'default_explorer'
 
   const tripsStore    = useCRUD('trips',     userId, DEFAULT_TRIPS)
   const bookingsStore = useCRUD('bookings',  userId, DEFAULT_BOOKINGS)

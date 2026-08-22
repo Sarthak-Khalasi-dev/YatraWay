@@ -258,6 +258,108 @@ body {
 }
 .sec-sub { font-size: 13px; color: var(--text-3); margin-top: 3px; }
 
+/* ═══════════════════════════════════════════════════════
+   PAGE ROOT & SHARED LUXURY LAYOUT (Trips, Bookings, Experiences, Favorites)
+═══════════════════════════════════════════════════════ */
+.pg-root,
+.page-shell {
+  display: flex !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  overflow: hidden !important;
+  background: #FAF8F5 !important;
+  opacity: 1 !important;
+}
+
+.pg-on,
+.page-shell.mounted {
+  opacity: 1 !important;
+}
+
+.pg-main,
+.page-body {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  background: #FAF8F5 !important;
+}
+
+.pg-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 18px 36px !important;
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #EFEAE2 !important;
+  flex-shrink: 0 !important;
+  z-index: 10 !important;
+}
+
+.pg-title {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #18181B !important;
+}
+
+.pg-sub {
+  font-size: 13px !important;
+  color: #8C867A !important;
+  margin-top: 3px !important;
+  font-weight: 500 !important;
+}
+
+.pg-scroll {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 24px 36px 80px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.pg-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.pg-scroll::-webkit-scrollbar-thumb {
+  background: #DDD7CE;
+  border-radius: 3px;
+}
+
+.cat-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.cat-pill {
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: 1px solid #E5DFD5;
+  background: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555048;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cat-pill:hover {
+  border-color: #18181B;
+  color: #18181B;
+}
+
+.cat-pill--on {
+  background: #18181B !important;
+  color: #FFFFFF !important;
+  border-color: #18181B !important;
+}
+
 /* ── Animations ── */
 @keyframes slideDown  { from { opacity:0; transform:translateY(-14px) } to { opacity:1; transform:translateY(0) } }
 @keyframes slideUp    { from { opacity:0; transform:translateY(18px)  } to { opacity:1; transform:translateY(0) } }

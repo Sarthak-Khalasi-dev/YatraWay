@@ -70,12 +70,14 @@ const tripRoutes = require('./routes/tripRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const emergencyRoutes = require('./routes/emergencyRoutes');
+const geminiRoutes = require('./routes/geminiRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/emergency', emergencyRoutes);
+app.use('/api/gemini', geminiRoutes);
 
 // Health check
 app.get('/', (req, res) => res.send('API is running...'));

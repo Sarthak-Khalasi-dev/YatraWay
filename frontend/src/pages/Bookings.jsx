@@ -121,8 +121,29 @@ export default function Bookings() {
   const handleEdit = (bk) => { bookingsStore.update(bk.id, bk); refresh(); setEditBk(null) }
   const handleDelete = (id) => { bookingsStore.remove(id); refresh(); setDeleteId(null) }
 
-  const filtered = bookings.filter(b => tab === 'All' || b.type === tab)
-  const totalSpend = bookings.reduce((acc, b) => {
+  const displayBookings = bookings.length > 0 ? bookings : [
+    {
+      id: 'bk_1', type: 'Flights', title: 'BLR → DPS (Bali)',
+      detail: 'IndiGo · 6E-1234 · Economy', date: '20 May 2024', time: '06:30 AM',
+      status: 'Confirmed', price: '₹18,500', ref: 'IGO-2024-BLR-DPS',
+      img: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&h=400&q=80&auto=format&fit=crop', icon: '✈️', duration: '5h 15m',
+    },
+    {
+      id: 'bk_2', type: 'Hotels', title: 'Komaneka at Bisma',
+      detail: 'Ubud, Bali · Valley Deluxe Villa · 2 Guests', date: '20 May — 02 Jun 2024', time: 'Check-in 2:00 PM',
+      status: 'Confirmed', price: '₹28,000', ref: 'KOM-2024-0520',
+      img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&h=400&q=80&auto=format&fit=crop', icon: '🏨', duration: '12 Nights',
+    },
+    {
+      id: 'bk_3', type: 'Activities', title: 'Nusa Penida Manta Ray Snorkel',
+      detail: 'Private speedboat charter + GoPro underwater footage', date: '25 May 2024', time: '07:30 AM',
+      status: 'Confirmed', price: '₹6,500', ref: 'ACT-NUSA-0525',
+      img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&q=80&auto=format&fit=crop', icon: '🎯', duration: '6 Hours',
+    },
+  ]
+
+  const filtered = displayBookings.filter(b => tab === 'All' || b.type === tab)
+  const totalSpend = displayBookings.reduce((acc, b) => {
     const n = parseInt((b.price || '').replace(/[₹,]/g, ''))
     return acc + (isNaN(n) ? 0 : n)
   }, 0)
