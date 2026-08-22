@@ -408,6 +408,7 @@ export default function Destinations() {
   const [aiError, setAiError] = useState('')
   const [aiSpotlight, setAiSpotlight] = useState(null)
   const [aiSearchTag, setAiSearchTag] = useState('')
+  const [chatHistory, setChatHistory] = useState([])
 
   // Format price helper according to chosen currency
   const formatPrice = (dest) => {
@@ -443,6 +444,20 @@ export default function Destinations() {
     setIsGeneratingAI(true)
     setAiError('')
 
+    // Parse user input for metadata (days, people, budget)
+    const daysMatch = currentPrompt.match(/(\d+)\s*(?:day|days|d|nights)/i)
+    const peopleMatch = currentPrompt.match(/(\d+)\s*(?:people|person|traveler|travelers|guests|members)/i)
+    const budgetMatch = currentPrompt.match(/(?:budget|rs|inr|₹|under|around)?\s*(\d{4,7})\s*(?:rs|rupees|inr|k)?/i)
+
+    const parsedDays = daysMatch ? parseInt(daysMatch[1]) : 4
+    const parsedPeople = peopleMatch ? parseInt(peopleMatch[1]) : 4
+    const parsedBudget = budgetMatch ? parseInt(budgetMatch[1]) : (parsedDays * 12500)
+    const perPerson = Math.round(parsedBudget / parsedPeople)
+
+    // Add user message to conversation history
+    const userMsg = { id: Date.now(), sender: 'user', text: currentPrompt }
+    setChatHistory((prev) => [...prev, userMsg])
+
     try {
       const response = await api.post('/gemini/generate-destinations', {
         prompt: currentPrompt,
@@ -450,18 +465,29 @@ export default function Destinations() {
       })
 
       if (response.data && response.data.destinations && response.data.destinations.length > 0) {
-        const newDestinations = response.data.destinations.map((d) => ({
+        const newDestinations = response.data.destinations.map((d, index) => ({
           ...d,
           isIndia: d.country?.toLowerCase() === 'india' || true,
-          priceINR: d.priceInINR || 35000,
-          priceUSD: d.priceInUSD || 420,
+          priceINR: index === 0 ? perPerson : (d.priceInINR || 35000),
+          priceUSD: index === 0 ? Math.round(perPerson / 85) : (d.priceInUSD || 420),
+          totalBudgetINR: parsedBudget,
+          peopleCount: parsedPeople,
+          daysCount: parsedDays,
           isAiGenerated: true,
         }))
 
-        // Prepend AI generated escapes and set spotlight
-        setAiSpotlight(newDestinations[0])
+        const primarySpotlight = newDestinations[0]
+        setAiSpotlight(primarySpotlight)
         setAiSearchTag(currentPrompt)
         setDestList((prev) => [...newDestinations, ...prev.filter((p) => !newDestinations.some((n) => n.id === p.id))])
+        
+        // Add AI response to chat history
+        const aiMsg = {
+          id: Date.now() + 1,
+          sender: 'ai',
+          text: `I have curated a personalized ${parsedDays}-day royal escape for ${parsedPeople} travelers with a total budget of ₹${parsedBudget.toLocaleString('en-IN')} (~₹${perPerson.toLocaleString('en-IN')}/person). Review your tailored spotlight itinerary below, or refine your plan directly in our interactive customizer.`,
+        }
+        setChatHistory((prev) => [...prev, aiMsg])
         setAiPrompt('')
         setShowAllJourneys(true)
 
@@ -542,9 +568,13 @@ export default function Destinations() {
   const handlePlanJourney = (dest) => {
     navigate('/trips', {
       state: {
-        initialDest: `${dest.name}, ${dest.country}`,
+        initialDest: dest.name,
         initialImg: dest.img,
-        initialBudget: currency === 'INR' ? dest.priceINR : dest.priceUSD,
+        initialBudget: dest.totalBudgetINR || (dest.priceINR ? dest.priceINR * (dest.peopleCount || 1) : 50000),
+        initialDays: dest.daysCount || 4,
+        initialPeople: dest.peopleCount || 4,
+        initialDesc: dest.description,
+        autoOpenCustomizer: true,
       },
     })
   }
@@ -636,34 +666,87 @@ export default function Destinations() {
         {/* Content Scrollable Area */}
         <div className="dest-content-scroll">
           {/* ── AI PROMPT BANNER (Powered by Groq AI) ── */}
-          <div className="ai-gemini-banner">
-            <div className="ai-banner-left">
-              <div className="ai-badge">✨ YATRAWAY AI TRAVEL CURATOR</div>
-              <h3 className="ai-banner-title">Describe your dream journey in India or worldwide</h3>
-              <p className="ai-banner-sub">
-                Ask YatraWay AI to generate personalized, safe solo escapes with pricing in {currency}, certified homestays, and curated itineraries.
-              </p>
-            </div>
+          <div className={`ai-gemini-banner ${chatHistory.length > 0 ? 'chat-mode' : ''}`}>
+            {chatHistory.length === 0 ? (
+              <>
+                <div className="ai-banner-left">
+                  <div className="ai-badge">✨ YATRAWAY AI TRAVEL CURATOR</div>
+                  <h3 className="ai-banner-title">Describe your dream journey in India or worldwide</h3>
+                  <p className="ai-banner-sub">
+                    Ask YatraWay AI to generate personalized, safe solo or group escapes with pricing in {currency}, certified homestays, and curated itineraries.
+                  </p>
+                </div>
 
-            <form className="ai-banner-form" onSubmit={handleGenerateAI}>
-              <div className="ai-input-wrap">
-                <input
-                  type="text"
-                  className="ai-banner-input"
-                  placeholder="e.g., Hidden water springs in Himachal for solo female traveler under ₹25,000..."
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  disabled={isGeneratingAI}
-                />
-                <button type="submit" className="ai-banner-submit" disabled={isGeneratingAI || !aiPrompt.trim()}>
-                  {isGeneratingAI ? (
-                    <span className="ai-loading-spinner"></span>
-                  ) : (
-                    <span>GENERATE WITH AI →</span>
-                  )}
-                </button>
+                <form className="ai-banner-form" onSubmit={handleGenerateAI}>
+                  <div className="ai-input-wrap">
+                    <input
+                      type="text"
+                      className="ai-banner-input"
+                      placeholder="e.g., Jaipur for 4 days, 4 people, budget 50000rs..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      disabled={isGeneratingAI}
+                    />
+                    <button type="submit" className="ai-banner-submit" disabled={isGeneratingAI || !aiPrompt.trim()}>
+                      {isGeneratingAI ? (
+                        <span className="ai-loading-spinner"></span>
+                      ) : (
+                        <span>GENERATE WITH AI →</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="ai-chat-thread-container">
+                <div className="ai-chat-header">
+                  <span className="ai-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <SparkleIcon size={12} color="#D4A843" /> CONCIERGE TRAVEL ASSISTANT
+                  </span>
+                  <button
+                    className="ai-chat-reset-btn"
+                    onClick={() => {
+                      setChatHistory([])
+                      setAiSpotlight(null)
+                      setAiSearchTag('')
+                    }}
+                  >
+                    + New Plan
+                  </button>
+                </div>
+
+                <div className="ai-chat-messages">
+                  {chatHistory.map((msg) => (
+                    <div key={msg.id} className={`ai-chat-bubble ${msg.sender}`}>
+                      <span className="chat-bubble-sender">
+                        {msg.sender === 'user' ? 'YOU' : 'YATRAWAY AI CONCIERGE'}
+                      </span>
+                      <p className="chat-bubble-text">{msg.text}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <form className="ai-banner-form" onSubmit={handleGenerateAI}>
+                  <div className="ai-input-wrap">
+                    <input
+                      type="text"
+                      className="ai-banner-input"
+                      placeholder="Ask to refine (e.g. 'Add hot air ballooning', 'Change budget to ₹40k', 'Include 5-star palace stay')..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      disabled={isGeneratingAI}
+                    />
+                    <button type="submit" className="ai-banner-submit" disabled={isGeneratingAI || !aiPrompt.trim()}>
+                      {isGeneratingAI ? (
+                        <span className="ai-loading-spinner"></span>
+                      ) : (
+                        <span>REFINE WITH AI →</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            )}
           </div>
 
           {/* ── QUICK REGION / CATEGORY TABS ── */}
@@ -848,7 +931,11 @@ export default function Destinations() {
                       </div>
                       <div className="asc-price-box">
                         <span className="asc-price-val">{formatPrice(aiSpotlight)}</span>
-                        <span className="asc-price-sub">/ traveler</span>
+                        <span className="asc-price-sub">
+                          {aiSpotlight.peopleCount
+                            ? `/ traveler (₹${(aiSpotlight.totalBudgetINR || aiSpotlight.priceINR * aiSpotlight.peopleCount)?.toLocaleString('en-IN')} total for ${aiSpotlight.peopleCount} guests)`
+                            : '/ traveler'}
+                        </span>
                       </div>
                     </div>
 
@@ -869,10 +956,10 @@ export default function Destinations() {
 
                     <div className="asc-meta-row">
                       <span className="asc-meta-item">
-                        <CalendarIcon size={13} color="#8C867A" /> {aiSpotlight.duration || '4 Days / 3 Nights'}
+                        <CalendarIcon size={13} color="#8C867A" /> {aiSpotlight.daysCount ? `${aiSpotlight.daysCount} Days / ${Math.max(1, aiSpotlight.daysCount - 1)} Nights` : (aiSpotlight.duration || '4 Days / 3 Nights')}
                       </span>
                       <span className="asc-meta-item">
-                        <ShieldIcon size={13} color="#10B981" /> {aiSpotlight.safetyScore || '9.9/10 Solo Safe'}
+                        <ShieldIcon size={13} color="#10B981" /> {aiSpotlight.safetyScore || '9.9/10 Solo & Group Safe'}
                       </span>
                       {aiSpotlight.bestSeason && (
                         <span className="asc-meta-item">
@@ -883,7 +970,7 @@ export default function Destinations() {
 
                     <div className="asc-actions-row">
                       <button className="asc-btn-primary" onClick={() => handlePlanJourney(aiSpotlight)}>
-                        <span>Plan Multi-City Journey →</span>
+                        <span>Customize Itinerary in Builder →</span>
                       </button>
                       <button className="asc-btn-secondary" onClick={() => setSelectedModalDest(aiSpotlight)}>
                         <span>Inspect Full Dossier</span>
