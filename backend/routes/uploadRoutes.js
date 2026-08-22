@@ -3,7 +3,6 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const User = require('../models/userModel');
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
@@ -15,7 +14,7 @@ const storage = multer.diskStorage({
 });
 
 function checkFileType(file, cb) {
-  const filetypes = /jpg|jpeg|png/;
+  const filetypes = /jpg|jpeg|png|webp/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = filetypes.test(file.mimetype);
 
@@ -63,17 +62,10 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
 
     const imagePath = `/uploads/${req.file.filename}`;
 
-    const user = await User.findById(req.user._id);
-    if (user) {
-      user.avatar = imagePath;
-      await user.save();
-      res.send({
-        message: 'Image uploaded',
-        image: user.avatar,
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
-    }
+    res.send({
+      message: 'Image uploaded',
+      image: imagePath,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

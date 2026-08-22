@@ -1,41 +1,49 @@
-const EmergencyContact = require('../models/emergencyModel');
+// Standalone Emergency Contact Controller with in-memory store
+let contactsStore = [
+  {
+    _id: 'c1',
+    name: 'Rajesh Sharma',
+    relation: 'Father',
+    phone: '+91 98765 43210',
+    initial: 'R'
+  },
+  {
+    _id: 'c2',
+    name: 'Priya Sharma',
+    relation: 'Sister',
+    phone: '+91 98765 12345',
+    initial: 'P'
+  },
+  {
+    _id: 'c3',
+    name: 'Indian Embassy Bali',
+    relation: 'Embassy / Consulate',
+    phone: '+62 361 226228',
+    initial: 'I'
+  }
+];
 
-// @desc    Get all user emergency contacts
-// @route   GET /api/emergency
-// @access  Private
 const getContacts = async (req, res) => {
-  const contacts = await EmergencyContact.find({ user: req.user._id });
-  res.json(contacts);
+  res.json(contactsStore);
 };
 
-// @desc    Create a new emergency contact
-// @route   POST /api/emergency
-// @access  Private
 const createContact = async (req, res) => {
   const { name, relation, phone } = req.body;
-
-  const contact = new EmergencyContact({
-    user: req.user._id,
-    name, relation, phone,
-    initial: name.charAt(0).toUpperCase(),
-  });
-
-  const createdContact = await contact.save();
-  res.status(201).json(createdContact);
+  const newContact = {
+    _id: 'c_' + Date.now(),
+    name,
+    relation,
+    phone,
+    initial: (name || 'E').charAt(0).toUpperCase(),
+  };
+  contactsStore.unshift(newContact);
+  res.status(201).json(newContact);
 };
 
-// @desc    Delete a contact
-// @route   DELETE /api/emergency/:id
-// @access  Private
 const deleteContact = async (req, res) => {
-  const contact = await EmergencyContact.findById(req.params.id);
-
-  if (contact) {
-    if (contact.user.toString() !== req.user._id.toString()) {
-      res.status(401).json({ message: 'Not authorized' });
-      return;
-    }
-    await contact.deleteOne();
+  const idx = contactsStore.findIndex(c => c._id === req.params.id);
+  if (idx !== -1) {
+    contactsStore.splice(idx, 1);
     res.json({ message: 'Contact removed' });
   } else {
     res.status(404).json({ message: 'Contact not found' });
