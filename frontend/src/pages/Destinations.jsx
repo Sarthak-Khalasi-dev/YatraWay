@@ -1,9 +1,25 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import api from '../services/api'
 import { SparkleIcon, IndiaIcon, MountainIcon, WaveIcon, MonumentIcon, LeafIcon, GlobeIcon, CalendarIcon, ShieldIcon, CompassIcon, MapPinIcon } from '../components/icons/LuxuryIcons'
 import './Destinations.css'
+
+/* ── Animation Variants ── */
+const staggerGrid = {
+  animate: { transition: { staggerChildren: 0.06, delayChildren: 0.08 } },
+}
+const cardEnter = {
+  initial: { opacity: 0, y: 28, scale: 0.96 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 310, damping: 25 } },
+  exit:    { opacity: 0, y: -10, scale: 0.97, transition: { duration: 0.18 } },
+}
+const spotlightEnter = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] } },
+  exit:    { opacity: 0, y: -16, transition: { duration: 0.22 } },
+}
 
 // ── Comprehensive Curated Destinations (Heavy India Focus + World Classics) ──
 const INITIAL_DESTINATIONS = [
@@ -408,14 +424,18 @@ export default function Destinations() {
   const [aiError, setAiError] = useState('')
   const [aiSpotlight, setAiSpotlight] = useState(null)
   const [aiSearchTag, setAiSearchTag] = useState('')
+  const [chatHistory, setChatHistory] = useState([])
 
   // Format price helper according to chosen currency
   const formatPrice = (dest) => {
+    if (!dest) return '₹0'
+    const pINR = dest.priceINR ?? dest.priceInINR
+    const pUSD = dest.priceUSD ?? dest.priceInUSD
     if (currency === 'INR') {
-      const val = dest.priceINR || Math.round(dest.priceUSD * 85)
+      const val = pINR || (pUSD ? Math.round(pUSD * 85) : 11750)
       return `₹${val.toLocaleString('en-IN')}`
     } else {
-      const val = dest.priceUSD || Math.round(dest.priceINR / 85)
+      const val = pUSD || (pINR ? Math.round(pINR / 85) : 138)
       return `$${val.toLocaleString('en-US')}`
     }
   }
@@ -435,46 +455,191 @@ export default function Destinations() {
   }
 
   // ── YatraWay AI Destination Generator Handler ──
+  // ── Smart Travel Intent Detection ──
+  const isTravelQuery = (text) => {
+    const t = text.toLowerCase().trim()
+
+    // Pure greetings & casual non-travel messages — return false
+    const greetings = ['hey', 'heyy', 'heyyy', 'hi', 'hello', 'hii', 'hiii', 'yo', 'sup', 'howdy', 'whats up', 'what\'s up', 'ok', 'okay', 'thanks', 'thank you', 'bye', 'goodbye', 'lol', 'haha', 'nice', 'cool', 'wow', 'great', 'good', 'test', 'testing']
+    if (greetings.some(g => t === g || t === g + '!' || t === g + '?')) return false
+
+    // Must contain at least one travel signal to be treated as a query
+    const travelSignals = [
+      // Places
+      'jaipur','delhi','mumbai','goa','kerala','ladakh','kashmir','rajasthan','manali','shimla','rishikesh','varanasi','agra','bangalore','hyderabad','kolkata','pune','udaipur','spiti','meghalaya','andaman','ooty','coorg','leh','hampi','mysore','darjeeling','sikkim','arunachal','mizoram','bali','thailand','paris','london','dubai','singapore','maldives','switzerland','japan','italy','greece','turkey',
+      // Trip keywords
+      'trip','travel','visit','tour','vacation','holiday','itinerary','plan','book','budget','days','nights','people','person','travelers','explore','destination','place','escape','journey','trek','hike','beach','mountain','heritage','culture','wellness',
+      // Budget signals
+      '₹','rs','inr','usd','$','k budget','budget','spend',
+      // Time signals
+      'days','nights','week','weekend','month',
+    ]
+    return travelSignals.some(signal => t.includes(signal))
+  }
+
+  // ── Concierge-style fallback reply for casual/greeting messages ──
+  const getCasualReply = (text) => {
+    const t = text.toLowerCase().trim()
+    if (['hey','heyy','heyyy','hi','hii','hiii','hello'].some(g => t.startsWith(g))) {
+      return `Hello! I'm your YatraWay AI Concierge. Where would you like to travel? Tell me a destination, your budget, and number of days — I'll curate a bespoke itinerary for you.`
+    }
+    if (t.includes('thanks') || t.includes('thank you')) {
+      return `You're most welcome! Feel free to ask anytime — I'm here to craft your perfect journey.`
+    }
+    if (t.includes('bye') || t.includes('goodbye')) {
+      return `Safe travels! Come back whenever you're ready to plan your next adventure. ✈️`
+    }
+    return `I'm your luxury travel concierge — share a destination, budget, or trip idea and I'll curate a personalized plan just for you!`
+  }
+
   const handleGenerateAI = async (e) => {
     e?.preventDefault()
     if (!aiPrompt.trim()) return
 
     const currentPrompt = aiPrompt.trim()
-    setIsGeneratingAI(true)
     setAiError('')
 
-    try {
-      const response = await api.post('/gemini/generate-destinations', {
-        prompt: currentPrompt,
-        count: 3,
-      })
+    // Add user message to conversation history immediately
+    const userMsg = { id: Date.now(), sender: 'user', text: currentPrompt }
+    setChatHistory((prev) => [...prev, userMsg])
+    setAiPrompt('')
 
-      if (response.data && response.data.destinations && response.data.destinations.length > 0) {
-        const newDestinations = response.data.destinations.map((d) => ({
-          ...d,
-          isIndia: d.country?.toLowerCase() === 'india' || true,
-          priceINR: d.priceInINR || 35000,
-          priceUSD: d.priceInUSD || 420,
-          isAiGenerated: true,
-        }))
-
-        // Prepend AI generated escapes and set spotlight
-        setAiSpotlight(newDestinations[0])
-        setAiSearchTag(currentPrompt)
-        setDestList((prev) => [...newDestinations, ...prev.filter((p) => !newDestinations.some((n) => n.id === p.id))])
-        setAiPrompt('')
-        setShowAllJourneys(true)
-
-        setTimeout(() => {
-          document.querySelector('.ai-spotlight-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 100)
-      }
-    } catch (err) {
-      console.error('Groq AI error:', err)
-      setAiError('Unable to generate with AI. Fallback loaded.')
-    } finally {
-      setIsGeneratingAI(false)
+    // ── INTENT CHECK: Is this a real travel query? ──
+    if (!isTravelQuery(currentPrompt)) {
+      const casualReply = getCasualReply(currentPrompt)
+      setTimeout(() => {
+        setChatHistory((prev) => [
+          ...prev,
+          { id: Date.now() + 1, sender: 'ai', text: casualReply },
+        ])
+      }, 400)
+      return
     }
+
+    // ── DEMO MODE: Parse numbers from prompt, then always show Udaipur ──
+    setIsGeneratingAI(true)
+
+    const daysMatch   = currentPrompt.match(/(\d+)\s*(?:day|days|d|nights)/i)
+    const peopleMatch = currentPrompt.match(/(\d+)\s*(?:people|person|traveler|travelers|guests|members)/i)
+
+    let parsedBudget = 47000
+    const kMatch = currentPrompt.match(/(\d+(?:\.\d+)?)\s*k/i)
+    if (kMatch) {
+      parsedBudget = Math.round(parseFloat(kMatch[1]) * 1000)
+    } else {
+      const budgetMatch = currentPrompt.match(/(?:budget|rs|inr|₹|under|around)?\s*(\d{4,7})/i)
+      if (budgetMatch) {
+        parsedBudget = parseInt(budgetMatch[1])
+      }
+    }
+
+    const parsedDays   = daysMatch   ? parseInt(daysMatch[1])   : 4
+    const parsedPeople = peopleMatch ? parseInt(peopleMatch[1]) : 4
+    const perPerson    = Math.round(parsedBudget / parsedPeople)
+
+    // ── Fake "thinking" delay — 2.5 s ──
+    await new Promise(resolve => setTimeout(resolve, 2500))
+
+    // ── Hardcoded Udaipur demo destination ──
+    const udaipurDemo = {
+      id: 'demo-udaipur-001',
+      name: 'Udaipur — City of Lakes & Royal Palaces',
+      country: 'India',
+      region: 'Rajasthan',
+      tag: 'HERITAGE',
+      rating: 4.9,
+      reviews: '3.2k',
+      description: `A regal escape to the "Venice of the East" — sail across shimmering Lake Pichola, wander through the grand City Palace, and dine under the stars at rooftop heritage restaurants. Udaipur blends royal grandeur with warm Rajasthani hospitality in every cobblestone alley.`,
+      activities: ['Heritage Walks', 'Boat Rides', 'Cultural Shows', 'Palace Tours'],
+      duration: `${parsedDays} Days / ${parsedDays - 1} Nights`,
+      safetyScore: '9.9 / 10 (Solo & Group Safe)',
+      bestSeason: 'October to March',
+      highlights: [
+        'City Palace & Zenana Mahal Tour',
+        'Lake Pichola Sunset Boat Ride',
+        'Bagore Ki Haveli Cultural Evening',
+        'Sajjangarh Monsoon Palace Sunrise',
+      ],
+      imageQuery: 'udaipur',
+      img: 'https://images.unsplash.com/photo-1615836245337-f5b9b2303f10?w=900&h=1100&q=85&auto=format&fit=crop',
+      priceINR: perPerson,
+      priceInINR: perPerson,
+      priceUSD: Math.round(perPerson / 85),
+      priceInUSD: Math.round(perPerson / 85),
+      priceDisplayINR: `₹${perPerson.toLocaleString('en-IN')}`,
+      priceDisplayUSD: `$${Math.round(perPerson / 85).toLocaleString('en-US')}`,
+      isIndia: true,
+      isAiGenerated: true,
+      totalBudgetINR: parsedBudget,
+      peopleCount: parsedPeople,
+      daysCount: parsedDays,
+    }
+
+    const supportingDemos = [
+      {
+        id: 'demo-udaipur-002',
+        name: 'Chittorgarh Fort & Kumbhalgarh Trail',
+        country: 'India', region: 'Rajasthan',
+        tag: 'HERITAGE', rating: 4.8, reviews: '1.1k',
+        description: 'Explore India\'s largest fort complex and walk the second-longest wall in the world, guided by expert historians at dawn.',
+        activities: ['Heritage Walks', 'Photography'],
+        duration: `${parsedDays} Days / ${parsedDays - 1} Nights`,
+        safetyScore: '9.8 / 10', bestSeason: 'Oct - Feb',
+        highlights: ['Vijay Stambha Sunrise', 'Kumbhalgarh Wall Hike', 'Rana Kumbha Palace', 'Light & Sound Show'],
+        imageQuery: 'rajasthan',
+        img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=900&h=1100&q=85&auto=format&fit=crop',
+        priceINR: perPerson + 2000, priceInINR: perPerson + 2000,
+        priceUSD: Math.round((perPerson + 2000) / 85), priceInUSD: Math.round((perPerson + 2000) / 85),
+        priceDisplayINR: `₹${(perPerson + 2000).toLocaleString('en-IN')}`,
+        priceDisplayUSD: `$${Math.round((perPerson + 2000) / 85)}`,
+        isIndia: true, isAiGenerated: true,
+        totalBudgetINR: parsedBudget, peopleCount: parsedPeople, daysCount: parsedDays,
+      },
+      {
+        id: 'demo-udaipur-003',
+        name: 'Jaisalmer Desert & Golden Dunes Camp',
+        country: 'India', region: 'Rajasthan',
+        tag: 'ADVENTURE', rating: 4.9, reviews: '2.4k',
+        description: 'Sleep under a billion stars in a luxury desert camp, ride camels at golden hour, and watch folk musicians perform by firelight in the Thar Desert.',
+        activities: ['Camel Safari', 'Cultural Shows', 'Stargazing'],
+        duration: `${parsedDays} Days / ${parsedDays - 1} Nights`,
+        safetyScore: '9.7 / 10', bestSeason: 'Nov - Feb',
+        highlights: ['Sam Sand Dunes Camel Trek', 'Jaisalmer Fort Sunrise', 'Luxury Desert Camp Night', 'Folk Music & Fire Show'],
+        imageQuery: 'jaisalmer',
+        img: 'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=900&h=1100&q=85&auto=format&fit=crop',
+        priceINR: perPerson + 4000, priceInINR: perPerson + 4000,
+        priceUSD: Math.round((perPerson + 4000) / 85), priceInUSD: Math.round((perPerson + 4000) / 85),
+        priceDisplayINR: `₹${(perPerson + 4000).toLocaleString('en-IN')}`,
+        priceDisplayUSD: `$${Math.round((perPerson + 4000) / 85)}`,
+        isIndia: true, isAiGenerated: true,
+        totalBudgetINR: parsedBudget, peopleCount: parsedPeople, daysCount: parsedDays,
+      },
+    ]
+
+    const allDemoDestinations = [udaipurDemo, ...supportingDemos]
+
+    setAiSpotlight(udaipurDemo)
+    setAiSearchTag(currentPrompt)
+    setDestList((prev) => [
+      ...allDemoDestinations,
+      ...prev.filter((p) => !allDemoDestinations.some((n) => n.id === p.id)),
+    ])
+
+    setChatHistory((prev) => [
+      ...prev,
+      {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: `✨ I've curated a royal ${parsedDays}-day Rajasthan escape for ${parsedPeople} travelers within your ₹${parsedBudget.toLocaleString('en-IN')} budget (~₹${perPerson.toLocaleString('en-IN')}/person). Udaipur — the City of Lakes — is your perfect match. Your bespoke spotlight itinerary is ready below!`,
+      },
+    ])
+
+    setShowAllJourneys(true)
+    setIsGeneratingAI(false)
+
+    setTimeout(() => {
+      document.querySelector('.ai-spotlight-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
   }
 
   // ── Filter & Search Logic ──
@@ -542,9 +707,13 @@ export default function Destinations() {
   const handlePlanJourney = (dest) => {
     navigate('/trips', {
       state: {
-        initialDest: `${dest.name}, ${dest.country}`,
+        initialDest: dest.name,
         initialImg: dest.img,
-        initialBudget: currency === 'INR' ? dest.priceINR : dest.priceUSD,
+        initialBudget: dest.totalBudgetINR || (dest.priceINR ? dest.priceINR * (dest.peopleCount || 1) : 50000),
+        initialDays: dest.daysCount || 4,
+        initialPeople: dest.peopleCount || 4,
+        initialDesc: dest.description,
+        autoOpenCustomizer: true,
       },
     })
   }
@@ -636,34 +805,87 @@ export default function Destinations() {
         {/* Content Scrollable Area */}
         <div className="dest-content-scroll">
           {/* ── AI PROMPT BANNER (Powered by Groq AI) ── */}
-          <div className="ai-gemini-banner">
-            <div className="ai-banner-left">
-              <div className="ai-badge">✨ YATRAWAY AI TRAVEL CURATOR</div>
-              <h3 className="ai-banner-title">Describe your dream journey in India or worldwide</h3>
-              <p className="ai-banner-sub">
-                Ask YatraWay AI to generate personalized, safe solo escapes with pricing in {currency}, certified homestays, and curated itineraries.
-              </p>
-            </div>
+          <div className={`ai-gemini-banner ${chatHistory.length > 0 ? 'chat-mode' : ''}`}>
+            {chatHistory.length === 0 ? (
+              <>
+                <div className="ai-banner-left">
+                  <div className="ai-badge">✨ YATRAWAY AI TRAVEL CURATOR</div>
+                  <h3 className="ai-banner-title">Describe your dream journey in India or worldwide</h3>
+                  <p className="ai-banner-sub">
+                    Ask YatraWay AI to generate personalized, safe solo or group escapes with pricing in {currency}, certified homestays, and curated itineraries.
+                  </p>
+                </div>
 
-            <form className="ai-banner-form" onSubmit={handleGenerateAI}>
-              <div className="ai-input-wrap">
-                <input
-                  type="text"
-                  className="ai-banner-input"
-                  placeholder="e.g., Hidden water springs in Himachal for solo female traveler under ₹25,000..."
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  disabled={isGeneratingAI}
-                />
-                <button type="submit" className="ai-banner-submit" disabled={isGeneratingAI || !aiPrompt.trim()}>
-                  {isGeneratingAI ? (
-                    <span className="ai-loading-spinner"></span>
-                  ) : (
-                    <span>GENERATE WITH AI →</span>
-                  )}
-                </button>
+                <form className="ai-banner-form" onSubmit={handleGenerateAI}>
+                  <div className="ai-input-wrap">
+                    <input
+                      type="text"
+                      className="ai-banner-input"
+                      placeholder="e.g., Jaipur for 4 days, 4 people, budget 50000rs..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      disabled={isGeneratingAI}
+                    />
+                    <button type="submit" className="ai-banner-submit" disabled={isGeneratingAI || !aiPrompt.trim()}>
+                      {isGeneratingAI ? (
+                        <span className="ai-loading-spinner"></span>
+                      ) : (
+                        <span>GENERATE WITH AI →</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <div className="ai-chat-thread-container">
+                <div className="ai-chat-header">
+                  <span className="ai-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <SparkleIcon size={12} color="#D4A843" /> CONCIERGE TRAVEL ASSISTANT
+                  </span>
+                  <button
+                    className="ai-chat-reset-btn"
+                    onClick={() => {
+                      setChatHistory([])
+                      setAiSpotlight(null)
+                      setAiSearchTag('')
+                    }}
+                  >
+                    + New Plan
+                  </button>
+                </div>
+
+                <div className="ai-chat-messages">
+                  {chatHistory.map((msg) => (
+                    <div key={msg.id} className={`ai-chat-bubble ${msg.sender}`}>
+                      <span className="chat-bubble-sender">
+                        {msg.sender === 'user' ? 'YOU' : 'YATRAWAY AI CONCIERGE'}
+                      </span>
+                      <p className="chat-bubble-text">{msg.text}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <form className="ai-banner-form" onSubmit={handleGenerateAI}>
+                  <div className="ai-input-wrap">
+                    <input
+                      type="text"
+                      className="ai-banner-input"
+                      placeholder="Ask to refine (e.g. 'Add hot air ballooning', 'Change budget to ₹40k', 'Include 5-star palace stay')..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      disabled={isGeneratingAI}
+                    />
+                    <button type="submit" className="ai-banner-submit" disabled={isGeneratingAI || !aiPrompt.trim()}>
+                      {isGeneratingAI ? (
+                        <span className="ai-loading-spinner"></span>
+                      ) : (
+                        <span>REFINE WITH AI →</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
+            )}
           </div>
 
           {/* ── QUICK REGION / CATEGORY TABS ── */}
@@ -818,8 +1040,9 @@ export default function Destinations() {
             {/* ── RIGHT COLUMN: CURATED ESCAPES ── */}
             <main className="curated-main">
               {/* ── AI SPOTLIGHT HERO SHOWCASE (When AI generates tailored itinerary) ── */}
+              <AnimatePresence>
               {aiSpotlight && (
-                <section className="ai-spotlight-card">
+                <motion.section className="ai-spotlight-card" variants={spotlightEnter} initial="initial" animate="animate" exit="exit">
                   <div className="asc-img-wrap">
                     <img src={aiSpotlight.img} alt={aiSpotlight.name} className="asc-img" />
                     <div className="asc-badge-floating">
@@ -848,7 +1071,11 @@ export default function Destinations() {
                       </div>
                       <div className="asc-price-box">
                         <span className="asc-price-val">{formatPrice(aiSpotlight)}</span>
-                        <span className="asc-price-sub">/ traveler</span>
+                        <span className="asc-price-sub">
+                          {aiSpotlight.peopleCount
+                            ? `/ traveler (₹${(aiSpotlight.totalBudgetINR || aiSpotlight.priceINR * aiSpotlight.peopleCount)?.toLocaleString('en-IN')} total for ${aiSpotlight.peopleCount} guests)`
+                            : '/ traveler'}
+                        </span>
                       </div>
                     </div>
 
@@ -869,10 +1096,10 @@ export default function Destinations() {
 
                     <div className="asc-meta-row">
                       <span className="asc-meta-item">
-                        <CalendarIcon size={13} color="#8C867A" /> {aiSpotlight.duration || '4 Days / 3 Nights'}
+                        <CalendarIcon size={13} color="#8C867A" /> {aiSpotlight.daysCount ? `${aiSpotlight.daysCount} Days / ${Math.max(1, aiSpotlight.daysCount - 1)} Nights` : (aiSpotlight.duration || '4 Days / 3 Nights')}
                       </span>
                       <span className="asc-meta-item">
-                        <ShieldIcon size={13} color="#10B981" /> {aiSpotlight.safetyScore || '9.9/10 Solo Safe'}
+                        <ShieldIcon size={13} color="#10B981" /> {aiSpotlight.safetyScore || '9.9/10 Solo & Group Safe'}
                       </span>
                       {aiSpotlight.bestSeason && (
                         <span className="asc-meta-item">
@@ -883,15 +1110,16 @@ export default function Destinations() {
 
                     <div className="asc-actions-row">
                       <button className="asc-btn-primary" onClick={() => handlePlanJourney(aiSpotlight)}>
-                        <span>Plan Multi-City Journey →</span>
+                        <span>Customize Itinerary in Builder →</span>
                       </button>
                       <button className="asc-btn-secondary" onClick={() => setSelectedModalDest(aiSpotlight)}>
                         <span>Inspect Full Dossier</span>
                       </button>
                     </div>
                   </div>
-                </section>
+                </motion.section>
               )}
+              </AnimatePresence>
 
               {/* Header Title + Subtitle + Sort Dropdown */}
               <div className="curated-header">
@@ -921,11 +1149,17 @@ export default function Destinations() {
               </div>
 
               {/* Destination Cards 3-Column Grid */}
-              <div className="curated-grid">
+              <motion.div
+                className="curated-grid"
+                variants={staggerGrid}
+                initial="animate"
+                animate="animate"
+                key={activeCategory + activeTags.join('') + sortOption}
+              >
                 {visibleDestinations.map((dest) => {
                   const isHearted = liked[dest.id]
                   return (
-                    <article key={dest.id} className="escape-card" onClick={() => setSelectedModalDest(dest)}>
+                    <motion.article key={dest.id} className="escape-card" variants={cardEnter} whileHover={{ y: -7, scale: 1.015 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 340, damping: 22 }} onClick={() => setSelectedModalDest(dest)}>
                       {/* Image Frame */}
                       <div className="escape-img-container">
                         <img src={dest.img} alt={dest.name} className="escape-img" loading="lazy" />
@@ -1004,10 +1238,10 @@ export default function Destinations() {
                           <span className="escape-btn-arrow">→</span>
                         </button>
                       </div>
-                    </article>
+                    </motion.article>
                   )
                 })}
-              </div>
+              </motion.div>
 
               {/* No Results Fallback */}
               {filtered.length === 0 && (
@@ -1045,9 +1279,24 @@ export default function Destinations() {
       </div>
 
       {/* ── EXPEDITION DETAILS MODAL ── */}
+      <AnimatePresence>
       {selectedModalDest && (
-        <div className="dest-modal-backdrop" onClick={() => setSelectedModalDest(null)}>
-          <div className="dest-modal-card" onClick={(e) => e.stopPropagation()}>
+        <motion.div
+          className="dest-modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22 }}
+          onClick={() => setSelectedModalDest(null)}
+        >
+          <motion.div
+            className="dest-modal-card"
+            initial={{ opacity: 0, scale: 0.92, y: 28 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <button className="dest-modal-close" onClick={() => setSelectedModalDest(null)}>
               ✕
             </button>
@@ -1115,9 +1364,10 @@ export default function Destinations() {
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   )
 }

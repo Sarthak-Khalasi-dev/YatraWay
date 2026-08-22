@@ -1,11 +1,29 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
+import { motion } from 'framer-motion'
 import Sidebar from '../components/Sidebar'
 import { fetchTrips } from '../store/slices/tripSlice'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { CalendarIcon, UsersIcon, FlameIcon, SparkleIcon, MapPinIcon } from '../components/icons/LuxuryIcons'
 import './Dashboard.css'
+
+/* ── Animation Variants ── */
+const fadeUp = {
+  initial: { opacity: 0, y: 30 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.48, ease: [0.25, 0.46, 0.45, 0.94] } },
+}
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+}
+const cardVariant = {
+  initial: { opacity: 0, y: 24, scale: 0.97 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 320, damping: 26 } },
+}
+const heroTextVariant = {
+  initial: { opacity: 0, x: -28 },
+  animate: { opacity: 1, x: 0, transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] } },
+}
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
@@ -105,10 +123,15 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* ── SCROLLABLE DASHBOARD BODY ── */}
-        <div className="db-scroll-body">
+      {/* ── SCROLLABLE DASHBOARD BODY ── */}
+        <motion.div
+          className="db-scroll-body"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
           {/* 1. HERO SECTION */}
-          <section className="db-hero-section">
+          <motion.section className="db-hero-section" variants={fadeUp}>
             <div className="db-hero-content">
               <div className="db-hero-text">
                 <h1 className="db-hero-h1">
@@ -141,10 +164,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </section>
+        </motion.section>
 
           {/* 2. LOCATION & NEXT TRIP BAR */}
-          <section className="db-widget-bar">
+          <motion.section className="db-widget-bar" variants={fadeUp}>
             <div className="widget-loc-item">
               <div className="widget-icon-box orange">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -195,10 +218,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* 3. RECOMMENDED FOR YOU */}
-          <section className="db-section">
+          <motion.section className="db-section" variants={fadeUp}>
             <div className="db-section-hdr">
               <h2 className="db-section-title">Recommended For You</h2>
               <button className="db-view-all" onClick={() => navigate('/destinations')}>
@@ -206,9 +229,9 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="db-rec-grid">
+            <motion.div className="db-rec-grid" variants={staggerContainer} initial="initial" animate="animate">
               {/* Card 1: Maldives */}
-              <div className="rec-card" onClick={() => navigate('/destinations')}>
+              <motion.div className="rec-card" variants={cardVariant} whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 350, damping: 22 }} onClick={() => navigate('/destinations')}>
                 <div className="rec-img-wrap">
                   <img src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=500&h=420&q=80&auto=format&fit=crop" alt="Maldives" />
                   <button className={`rec-heart-btn ${liked['maldives'] ? 'active' : ''}`} onClick={(e) => toggleHeart(e, 'maldives')}>
@@ -222,10 +245,10 @@ export default function Dashboard() {
                   <p className="rec-tag">Paradise on Earth</p>
                   <p className="rec-rating"><span className="star">★</span> 4.8 <span className="reviews">(320 reviews)</span></p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Card 2: Switzerland */}
-              <div className="rec-card" onClick={() => navigate('/destinations')}>
+              <motion.div className="rec-card" variants={cardVariant} whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 350, damping: 22 }} onClick={() => navigate('/destinations')}>
                 <div className="rec-img-wrap">
                   <img src="https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?w=500&h=420&q=80&auto=format&fit=crop" alt="Switzerland" />
                   <button className={`rec-heart-btn ${liked['swiss'] ? 'active' : ''}`} onClick={(e) => toggleHeart(e, 'swiss')}>
@@ -239,10 +262,10 @@ export default function Dashboard() {
                   <p className="rec-tag">Alpine Wonderland</p>
                   <p className="rec-rating"><span className="star">★</span> 4.9 <span className="reviews">(180 reviews)</span></p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Card 3: Greece */}
-              <div className="rec-card" onClick={() => navigate('/destinations')}>
+              <motion.div className="rec-card" variants={cardVariant} whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 350, damping: 22 }} onClick={() => navigate('/destinations')}>
                 <div className="rec-img-wrap">
                   <img src="https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w=500&h=420&q=80&auto=format&fit=crop" alt="Greece" />
                   <button className={`rec-heart-btn ${liked['greece'] ? 'active' : ''}`} onClick={(e) => toggleHeart(e, 'greece')}>
@@ -256,10 +279,10 @@ export default function Dashboard() {
                   <p className="rec-tag">Timeless Beauty</p>
                   <p className="rec-rating"><span className="star">★</span> 4.7 <span className="reviews">(210 reviews)</span></p>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Card 4: Bali */}
-              <div className="rec-card" onClick={() => navigate('/destinations')}>
+              <motion.div className="rec-card" variants={cardVariant} whileHover={{ y: -6, scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 350, damping: 22 }} onClick={() => navigate('/destinations')}>
                 <div className="rec-img-wrap">
                   <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500&h=420&q=80&auto=format&fit=crop" alt="Bali" />
                   <button className={`rec-heart-btn ${liked['bali'] ? 'active' : ''}`} onClick={(e) => toggleHeart(e, 'bali')}>
@@ -273,12 +296,12 @@ export default function Dashboard() {
                   <p className="rec-tag">Island of Gods</p>
                   <p className="rec-rating"><span className="star">★</span> 4.8 <span className="reviews">(420 reviews)</span></p>
                 </div>
-              </div>
-            </div>
-          </section>
+              </motion.div>
+            </motion.div>
+          </motion.section>
 
           {/* 4. PLAN YOUR NEXT ADVENTURE */}
-          <section className="db-section">
+          <motion.section className="db-section" variants={fadeUp}>
             <h2 className="db-section-title">Plan Your Next Adventure</h2>
 
             <div className="db-adv-grid">
@@ -347,10 +370,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* 5. YOUR UPCOMING TRIPS */}
-          <section className="db-section">
+          <motion.section className="db-section" variants={fadeUp}>
             <div className="db-section-hdr">
               <h2 className="db-section-title">Your Upcoming Trips</h2>
               <button className="db-view-all" onClick={() => navigate('/trips')}>
@@ -421,10 +444,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* 6. TRAVEL INSPIRATION */}
-          <section className="db-section">
+          <motion.section className="db-section" variants={fadeUp}>
             <div className="db-section-hdr">
               <h2 className="db-section-title">Travel Inspiration</h2>
               <button className="db-view-all" onClick={() => navigate('/experiences')}>
@@ -460,10 +483,10 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* 7. NEWSLETTER BANNER */}
-          <section className="db-newsletter-box">
+          <motion.section className="db-newsletter-box" variants={fadeUp}>
             <div className="nl-stamp-left">
               <div className="vintage-postmark">
                 <span>PASSPORT</span>
@@ -498,8 +521,8 @@ export default function Dashboard() {
                 <span>III</span>
               </div>
             </div>
-          </section>
-        </div>
+          </motion.section>
+        </motion.div>
       </div>
     </div>
   )

@@ -182,35 +182,78 @@ export default function Trips() {
   useEffect(() => {
     dispatch(fetchTrips())
     if (location.state?.initialDest) {
+      const incomingDays = Number(location.state.initialDays) || 4
+      const incomingBudget = Number(location.state.initialBudget) || 50000
+      const incomingPeople = Number(location.state.initialPeople) || 4
+
+      const incomingDaysPlan = location.state.initialDaysPlan || [
+        {
+          dayNumber: 1,
+          date: 'Day 1',
+          city: location.state.initialDest?.split(',')[0] || 'Jaipur',
+          theme: 'Arrival, Iconic Palaces & Royal Sunset',
+          activities: [
+            { name: 'Amber Fort Sunrise & Elephant Ridge', time: '08:30 AM', costINR: 1500, category: 'Culture', desc: 'Sheesh Mahal mirror gallery and hill panoramic ramparts.', duration: '3h' },
+            { name: 'Authentic Rajasthani Thali & Pyaaz Kachori', time: '01:30 PM', costINR: 800, category: 'Food', desc: 'Curated royal feast at heritage dining hall.', duration: '1.5h' },
+            { name: 'Hawa Mahal & City Palace Royal Walk', time: '04:30 PM', costINR: 900, category: 'Sightseeing', desc: 'Honeycomb facade photography and royal armory museum.', duration: '2h' },
+          ],
+        },
+        {
+          dayNumber: 2,
+          date: 'Day 2',
+          city: location.state.initialDest?.split(',')[0] || 'Jaipur',
+          theme: 'Boutique Bazaars & Nahargarh Sunset',
+          activities: [
+            { name: 'Johari Bazaar Gem & Textile Walk', time: '11:00 AM', costINR: 1200, category: 'Culture', desc: 'Handcrafted blue pottery and silver jewelry exploration.', duration: '2.5h' },
+            { name: 'Nahargarh Fort Sunset Skyline View', time: '05:30 PM', costINR: 1400, category: 'Sightseeing', desc: 'Panoramic Pink City golden hour vistas from hilltop terrace.', duration: '2.5h' },
+          ],
+        },
+        {
+          dayNumber: 3,
+          date: 'Day 3',
+          city: location.state.initialDest?.split(',')[0] || 'Jaipur',
+          theme: 'Stepwells, Folk Music & Chokhi Dhani',
+          activities: [
+            { name: 'Chand Baori / Panna Meena Kund Architecture', time: '10:30 AM', costINR: 800, category: 'Culture', desc: 'Geometric stepwell photography & village history.', duration: '2h' },
+            { name: 'Chokhi Dhani Village Fair & Folk Dance', time: '06:00 PM', costINR: 2200, category: 'Food', desc: 'Traditional Kalbelia performances, camel rides, and royal dinner.', duration: '4h' },
+          ],
+        },
+        {
+          dayNumber: 4,
+          date: 'Day 4',
+          city: location.state.initialDest?.split(',')[0] || 'Jaipur',
+          theme: 'Royal Souvenirs & Departure Coordination',
+          activities: [
+            { name: 'Bapu Bazaar Heritage Souvenir Haul', time: '10:00 AM', costINR: 600, category: 'Culture', desc: 'Jaipuri quilts, mojari leather shoes, and block print fabrics.', duration: '2h' },
+            { name: 'Private Airport / Transit Coordination', time: '03:00 PM', costINR: 1200, category: 'Sightseeing', desc: 'Seamless luxury transfer with luggage assistance.', duration: '1.5h' },
+          ],
+        },
+      ]
+
       const added = {
         _id: `journey-${Date.now()}`,
         dest: location.state.initialDest,
-        subtitle: `${location.state.initialDest} Multi-City Escape`,
-        statusTag: 'PLANNING',
+        subtitle: `${location.state.initialDest} Custom Escape`,
+        statusTag: 'CUSTOMIZED',
         status: 'Upcoming',
-        dates: 'Nov 15 — Nov 25',
-        days: 8,
-        budgetINR: 70000,
-        progress: 15,
-        img: location.state.initialImg || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&h=800&q=85&auto=format&fit=crop',
-        desc: `Custom curated adventure crafted for ${location.state.initialDest}.`,
-        cities: [{ name: location.state.initialDest, country: 'India', days: 8, dates: 'Nov 15 — Nov 25' }],
-        daysPlan: [
-          {
-            dayNumber: 1,
-            date: 'Day 1',
-            city: location.state.initialDest,
-            theme: 'Arrival & Iconic Highlights',
-            activities: [
-              { name: 'City Heritage & Landmark Tour', time: '10:00 AM', costINR: 1500, category: 'Culture', desc: 'Guided historic architectural exploration.', duration: '3h' },
-              { name: 'Traditional Organic Lunch', time: '01:30 PM', costINR: 900, category: 'Food', desc: 'Regional culinary delicacies.', duration: '1.5h' },
-            ],
-          },
-        ],
-        expenses: { transportINR: 12000, hotelINR: 24000, activitiesINR: 4500, foodINR: 8000 },
+        dates: 'Upcoming Immersion',
+        days: incomingDays,
+        budgetINR: incomingBudget,
+        progress: 80,
+        img: location.state.initialImg || 'https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1200&h=800&q=85&auto=format&fit=crop',
+        desc: location.state.initialDesc || `Custom curated adventure crafted for ${location.state.initialDest} (${incomingPeople} travelers, ₹${incomingBudget.toLocaleString('en-IN')}).`,
+        cities: [{ name: location.state.initialDest?.split(',')[0] || 'Destination', country: 'India', days: incomingDays, dates: 'Upcoming Immersion' }],
+        daysPlan: incomingDaysPlan.slice(0, incomingDays),
+        expenses: {
+          transportINR: Math.round(incomingBudget * 0.25),
+          hotelINR: Math.round(incomingBudget * 0.45),
+          activitiesINR: Math.round(incomingBudget * 0.15),
+          foodINR: Math.round(incomingBudget * 0.15),
+        },
       }
       setJourneys((prev) => [added, ...prev])
-      toast.success(`✨ Added ${location.state.initialDest} to My Journeys!`)
+      setSelectedItineraryTrip(added) // DIRECTLY OPENS THE INTERACTIVE ITINERARY CUSTOMIZER!
+      toast.success(`✨ Opened custom itinerary builder for ${location.state.initialDest}!`)
       window.history.replaceState({}, document.title)
     }
   }, [dispatch, location.state])

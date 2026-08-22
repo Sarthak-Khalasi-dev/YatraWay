@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { motion } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 import { logout } from '../store/slices/authSlice'
 import { MoonIcon, SunIcon, GiftIcon, LogoutIcon } from './icons/LuxuryIcons'
@@ -46,7 +47,12 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
+    <motion.aside
+      className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 28, delay: 0.05 }}
+    >
       <div className="sb-logo" onClick={() => navigate('/dashboard')}>
         {!collapsed ? (
           <div className="sb-logo-wanderlust">
@@ -65,13 +71,21 @@ export default function Sidebar() {
         {NAV.map(item => {
           const isActive = location.pathname === item.path
           return (
-            <button key={item.id} className={`sb-item ${isActive ? 'sb-item--active' : ''}`} onClick={() => navigate(item.path)} title={collapsed ? item.label : ''}>
+            <motion.button
+              key={item.id}
+              className={`sb-item ${isActive ? 'sb-item--active' : ''}`}
+              onClick={() => navigate(item.path)}
+              title={collapsed ? item.label : ''}
+              whileHover={{ x: 3, backgroundColor: isActive ? undefined : 'rgba(212,168,67,0.06)' }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+            >
               <span className="sb-item-icon"><NavIcon icon={item.icon} /></span>
               {!collapsed && <span className="sb-item-label">{item.label}</span>}
               {!collapsed && isActive && <span className="sb-active-dot" />}
               {!collapsed && item.badge && !isActive && <span className="sb-badge">{item.badge}</span>}
               {collapsed && item.badge && <span className="sb-badge sb-badge--dot" />}
-            </button>
+            </motion.button>
           )
         })}
       </nav>
@@ -117,6 +131,6 @@ export default function Sidebar() {
           <button className="sb-icon-btn sb-icon-btn--danger" onClick={handleLogout} title="Logout"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
       )}
-    </aside>
+    </motion.aside>
   )
 }
