@@ -17,9 +17,11 @@ const DEFAULT_INITIAL_JOURNEYS = [
     stops: '4 Stops',
     progress: 75,
     status: 'Upcoming',
-    img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=800&h=500&q=85&auto=format&fit=crop',
+    priceINR: 48000,
+    priceUSD: 580,
+    img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=1200&h=800&q=85&auto=format&fit=crop',
     subtitle: 'Golden Triangle & Mughal Heritage Odyssey',
-    desc: 'Witness the sunrise over the Taj Mahal, explore the red sandstone courts of Agra Fort, and wander through ancient marble artisan workshops.',
+    desc: 'Witness sunrise over the Taj Mahal, explore Emperor Shah Jahan’s marble chambers at Agra Fort, and take sunset boat rides on the Yamuna.',
   },
   {
     _id: 'journey-cinqueterre-2',
@@ -30,9 +32,26 @@ const DEFAULT_INITIAL_JOURNEYS = [
     stops: '5 Villages',
     progress: 20,
     status: 'Upcoming',
-    img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=800&h=500&q=85&auto=format&fit=crop',
+    priceINR: 145000,
+    priceUSD: 1750,
+    img: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1200&h=800&q=85&auto=format&fit=crop',
     subtitle: 'Italian Riviera Coastal Cliff Trail',
     desc: 'Hike the iconic Sentiero Azzurro clifftop paths connecting Riomaggiore, Manarola, Corniglia, Vernazza, and Monterosso al Mare.',
+  },
+  {
+    _id: 'journey-bali-3',
+    dest: 'Ubud, Bali',
+    statusTag: 'ONGOING TRIP',
+    dates: '20 Oct — 01 Nov',
+    days: 12,
+    stops: '4 Locations',
+    progress: 85,
+    status: 'Upcoming',
+    priceINR: 88000,
+    priceUSD: 1050,
+    img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&h=800&q=85&auto=format&fit=crop',
+    subtitle: 'Island of the Gods & Spiritual Temples',
+    desc: 'Explore the spiritual heart of Bali, from the lush rainforests and waterfalls of Ubud to the pristine sunset cliffs of Uluwatu.',
   },
 ]
 
@@ -49,7 +68,19 @@ export default function Trips() {
   const [selectedItineraryTrip, setSelectedItineraryTrip] = useState(null)
   const [showLogisticsModal, setShowLogisticsModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [menuOpenId, setMenuOpenId] = useState(null)
+
+  // Payment Flow State
+  const [travelersCount, setTravelersCount] = useState(2)
+  const [selectedPackageTier, setSelectedPackageTier] = useState('Luxury Suite')
+  const [paymentMethod, setPaymentMethod] = useState('UPI')
+  const [upiId, setUpiId] = useState('priyank@okhdfcbank')
+  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242')
+  const [cardExpiry, setCardExpiry] = useState('08/28')
+  const [cardCvv, setCardCvv] = useState('888')
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [paymentSuccessData, setPaymentSuccessData] = useState(null)
 
   // Form states for new trip
   const [newDest, setNewDest] = useState('')
@@ -57,7 +88,7 @@ export default function Trips() {
   const [newDays, setNewDays] = useState(7)
   const [newStops, setNewStops] = useState('3 Stops')
   const [newStatusTag, setNewStatusTag] = useState('DREAMING')
-  const [newImg, setNewImg] = useState('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80&auto=format&fit=crop')
+  const [newImg, setNewImg] = useState('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1000&q=85&auto=format&fit=crop')
   const [inviteEmail, setInviteEmail] = useState('')
 
   useEffect(() => {
@@ -67,14 +98,16 @@ export default function Trips() {
         _id: `journey-${Date.now()}`,
         dest: location.state.initialDest,
         statusTag: 'PLANNING',
-        dates: 'Next Season',
-        days: 7,
+        dates: 'Nov 15 — Nov 25',
+        days: 8,
         stops: '3 Locations',
-        progress: 10,
+        progress: 15,
         status: 'Upcoming',
-        img: location.state.initialImg || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80&auto=format&fit=crop',
+        priceINR: 65000,
+        priceUSD: 780,
+        img: location.state.initialImg || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&h=800&q=85&auto=format&fit=crop',
         subtitle: 'Curated Custom Escape',
-        desc: `Bespoke travel plan created for ${location.state.initialDest}.`,
+        desc: `Bespoke luxury itinerary crafted for ${location.state.initialDest}.`,
       }
       setJourneys((prev) => [added, ...prev])
       toast.success(`✨ Added ${location.state.initialDest} to My Journeys!`)
@@ -95,6 +128,8 @@ export default function Trips() {
       stops: newStops || '3 Stops',
       progress: 25,
       status: 'Upcoming',
+      priceINR: 52000,
+      priceUSD: 620,
       img: newImg,
       subtitle: 'Custom Crafted Journey',
       desc: `Explore the vibrant wonders and secret treasures of ${newDest.trim()}.`,
@@ -116,7 +151,7 @@ export default function Trips() {
   const handleInviteCrew = (e) => {
     e.preventDefault()
     if (inviteEmail) {
-      toast.success(`✉️ Invitation sent to ${inviteEmail}!`)
+      toast.success(`✉️ Invitation sent to ${inviteEmail}! Added to Priyank & Dhyey's team.`)
       setInviteEmail('')
     }
   }
@@ -128,6 +163,25 @@ export default function Trips() {
     } else {
       toast.success('🔗 Itinerary ready to share!')
     }
+  }
+
+  const handleProcessPayment = () => {
+    setIsProcessingPayment(true)
+    setTimeout(() => {
+      setIsProcessingPayment(false)
+      const confirmationRef = `YTR-${Math.floor(100000 + Math.random() * 900000)}`
+      const successObj = {
+        ref: confirmationRef,
+        dest: selectedItineraryTrip?.dest || 'Ubud, Bali',
+        dates: selectedItineraryTrip?.dates || '20 Oct — 01 Nov',
+        amount: `₹${((selectedItineraryTrip?.priceINR || 88000) * travelersCount).toLocaleString('en-IN')}`,
+        travelers: travelersCount,
+        tier: selectedPackageTier,
+        method: paymentMethod,
+      }
+      setPaymentSuccessData(successObj)
+      toast.success(`🎉 Booking Confirmed! Ref: ${confirmationRef}`)
+    }, 1200)
   }
 
   const activeJourneysList = journeys.filter((j) =>
@@ -204,6 +258,15 @@ export default function Trips() {
                             }}
                           >
                             📖 Open Itinerary
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedItineraryTrip(journey)
+                              setShowPaymentModal(true)
+                              setMenuOpenId(null)
+                            }}
+                          >
+                            💳 Book & Pay Now
                           </button>
                           <button
                             onClick={() => {
@@ -290,21 +353,39 @@ export default function Trips() {
           </div>
         ) : (
           /* ═════════════════════════════════════════════════════════════
-              VIEW MODE B: FULL ITINERARY VIEW (Matching Image 2)
+              VIEW MODE B: FULL ITINERARY VIEW (1:1 Matching Image 2)
           ═════════════════════════════════════════════════════════════ */
           <div className="itinerary-scroll-container">
-            {/* Back Navigation */}
+            {/* Top Back Navigation Bar */}
             <div className="itin-back-nav">
               <button className="itin-back-btn" onClick={() => setSelectedItineraryTrip(null)}>
                 ← Back to My Journeys
               </button>
+
+              <div className="itin-top-action-pills">
+                <button
+                  className="itin-pill-book-btn"
+                  onClick={() => setShowPaymentModal(true)}
+                >
+                  <span>💳 Book Plan & Pay</span>
+                </button>
+                <button
+                  className="itin-pill-logistics-btn"
+                  onClick={() => setShowLogisticsModal(true)}
+                >
+                  <span>✈️ Travel Logistics</span>
+                </button>
+              </div>
             </div>
 
-            {/* 1. Hero Panorama with Frosted Glass Card */}
+            {/* 1. Large High-Res Hero Panorama (Fixed Height & Solid Render) */}
             <div className="itin-hero-panorama">
               <img
-                src={selectedItineraryTrip.img || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&h=700&q=85&auto=format&fit=crop'}
-                alt="Itinerary Cover"
+                src={
+                  selectedItineraryTrip.img ||
+                  'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1400&h=800&q=90&auto=format&fit=crop'
+                }
+                alt={selectedItineraryTrip.dest}
                 className="itin-hero-img"
               />
               <div className="itin-hero-overlay" />
@@ -312,28 +393,35 @@ export default function Trips() {
               {/* Frosted Floating Card on Left */}
               <div className="itin-glass-card">
                 <div className="glass-badge-row">
-                  <span className="glass-badge-orange">ONGOING TRIP</span>
-                  <span className="glass-days-left">8 Days left</span>
+                  <span className="glass-badge-orange">
+                    {selectedItineraryTrip.statusTag || 'ONGOING TRIP'}
+                  </span>
+                  <span className="glass-days-left">
+                    {selectedItineraryTrip.days || 8} Days left
+                  </span>
                 </div>
 
                 <h2 className="glass-card-title">
-                  {selectedItineraryTrip.dest === 'Agra, India' ? 'Mughal Heritage of Agra' : 'Island of the Gods'}
+                  {selectedItineraryTrip.dest === 'Agra, India'
+                    ? 'Mughal Heritage of Agra'
+                    : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                    ? 'Italian Riviera Cliff Villages'
+                    : 'Island of the Gods'}
                 </h2>
+
                 <p className="glass-card-desc">
-                  {selectedItineraryTrip.desc || 'Explore the spiritual heart of Bali, from the lush jungles of Ubud to the pristine beaches of Uluwatu.'}
+                  {selectedItineraryTrip.desc ||
+                    'Explore the spiritual heart of Bali, from the lush jungles of Ubud to the pristine beaches of Uluwatu.'}
                 </p>
 
                 <div className="glass-actions-row">
-                  <button className="glass-btn-white" onClick={handleShareItinerary}>
-                    <span>Share with Friends</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                    </svg>
+                  <button className="glass-btn-white" onClick={() => setShowPaymentModal(true)}>
+                    <span>💳 Book Plan & Checkout</span>
+                    <span>→</span>
                   </button>
 
                   <button className="glass-btn-outline" onClick={() => setShowLogisticsModal(true)}>
-                    <span>View Logistics</span>
+                    <span>View Logistics & Stay</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
@@ -362,9 +450,13 @@ export default function Trips() {
                     <div className="day-title-row">
                       <div>
                         <h4 className="day-headline">
-                          {selectedItineraryTrip.dest === 'Agra, India' ? 'Taj Mahal Sunrise & Red Fort Exploration' : 'Ubud Arrival & Temple Visit'}
+                          {selectedItineraryTrip.dest === 'Agra, India'
+                            ? 'Taj Mahal Sunrise & Red Fort Exploration'
+                            : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                            ? 'Monterosso al Mare Arrival & Wine Tasting'
+                            : 'Ubud Arrival & Temple Visit'}
                         </h4>
-                        <p className="day-sub-location">Tuesday, Oct 24 • Spiritual Center</p>
+                        <p className="day-sub-location">Tuesday, Oct 24 • Spiritual Sanctuary</p>
                       </div>
                       <span className="day-compass-icon">🧭</span>
                     </div>
@@ -374,10 +466,18 @@ export default function Trips() {
                         <div className="event-icon-box">🍴</div>
                         <div className="event-details">
                           <h5 className="event-name">
-                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Royal Mughlai Lunch at Peshawri' : 'Lunch at Ibu Rai'}
+                            {selectedItineraryTrip.dest === 'Agra, India'
+                              ? 'Royal Mughlai Lunch at Peshawri'
+                              : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                              ? 'Ligurian Seafood & Pesto Lunch'
+                              : 'Lunch at Ibu Rai'}
                           </h5>
                           <p className="event-desc">
-                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Authentic tandoori delicacies and saffron biryani.' : 'Traditional Balinese organic cuisine and tropical herbal teas.'}
+                            {selectedItineraryTrip.dest === 'Agra, India'
+                              ? 'Authentic tandoori delicacies and saffron biryani.'
+                              : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                              ? 'Fresh catch of the day with crisp Cinque Terre DOC white wine.'
+                              : 'Traditional Balinese organic cuisine and tropical herbal teas.'}
                           </p>
                         </div>
                         <span className="event-time">12:30 PM</span>
@@ -387,10 +487,18 @@ export default function Trips() {
                         <div className="event-icon-box">🚶</div>
                         <div className="event-details">
                           <h5 className="event-name">
-                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Agra Fort Diwan-i-Khas Heritage Walk' : 'Sacred Monkey Forest Sanctuary'}
+                            {selectedItineraryTrip.dest === 'Agra, India'
+                              ? 'Agra Fort Diwan-i-Khas Heritage Walk'
+                              : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                              ? 'Sentiero Azzurro Coastal Hike to Vernazza'
+                              : 'Sacred Monkey Forest Sanctuary'}
                           </h5>
                           <p className="event-desc">
-                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Private architectural walk through Emperor Shah Jahan’s marble chambers.' : 'Guided walk through ancient jungle temples and sacred banyan trees.'}
+                            {selectedItineraryTrip.dest === 'Agra, India'
+                              ? 'Private architectural walk through Emperor Shah Jahan’s marble chambers.'
+                              : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                              ? 'Breathtaking clifftop views overlooking colorful harbor boats.'
+                              : 'Guided walk through ancient jungle temples and sacred banyan trees.'}
                           </p>
                         </div>
                         <span className="event-time">03:00 PM</span>
@@ -406,9 +514,13 @@ export default function Trips() {
                     <div className="day-title-row">
                       <div>
                         <h4 className="day-headline">
-                          {selectedItineraryTrip.dest === 'Agra, India' ? 'Fatehpur Sikri & Artisan Marble Inlay' : 'Sunsets & Coastal Cliffs'}
+                          {selectedItineraryTrip.dest === 'Agra, India'
+                            ? 'Fatehpur Sikri & Artisan Marble Inlay'
+                            : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                            ? 'Manarola Sunset & Clifftop Aperitivo'
+                            : 'Sunsets & Coastal Cliffs'}
                         </h4>
-                        <p className="day-sub-location">Wednesday, Oct 25 • Uluwatu Coast</p>
+                        <p className="day-sub-location">Wednesday, Oct 25 • Coastal Trails</p>
                       </div>
                       <span className="day-compass-icon">🏖️</span>
                     </div>
@@ -418,10 +530,18 @@ export default function Trips() {
                         <div className="event-icon-box">🌊</div>
                         <div className="event-details">
                           <h5 className="event-name">
-                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Mehtab Bagh Moonlight River Walk' : 'Padang Padang Beach Surf'}
+                            {selectedItineraryTrip.dest === 'Agra, India'
+                              ? 'Mehtab Bagh Moonlight River Walk'
+                              : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                              ? 'Riomaggiore Harbor Sunset Boat Cruise'
+                              : 'Padang Padang Beach Surf & Relaxation'}
                           </h5>
                           <p className="event-desc">
-                            {selectedItineraryTrip.dest === 'Agra, India' ? 'Sunset view of the Taj Mahal across the calm waters of the Yamuna.' : 'Morning surf session and cliffside relaxation overlooking crystal reef waters.'}
+                            {selectedItineraryTrip.dest === 'Agra, India'
+                              ? 'Sunset view of the Taj Mahal across the calm waters of the Yamuna.'
+                              : selectedItineraryTrip.dest === 'Cinque Terre, Italy'
+                              ? 'Private boat tour taking in the pastel houses glowing against the sunset.'
+                              : 'Morning surf session and cliffside relaxation overlooking crystal reef waters.'}
                           </p>
                         </div>
                         <span className="event-time">09:00 AM</span>
@@ -431,7 +551,7 @@ export default function Trips() {
                 </div>
               </div>
 
-              {/* Right Column: Route Map, Travel Crew & Logistics Box */}
+              {/* Right Column: Route Map, Priyank & Dhyey Travel Crew & Logistics */}
               <div className="itin-sidebar-column">
                 {/* Route Map Card */}
                 <div className="itin-map-box">
@@ -447,13 +567,13 @@ export default function Trips() {
                         fill="#A8A29E"
                         opacity="0.85"
                       />
-                      <circle cx="160" cy="95" r="4" fill="#000000" />
-                      <circle cx="160" cy="95" r="10" fill="rgba(0,0,0,0.15)" />
+                      <circle cx="160" cy="95" r="5" fill="#18181B" />
+                      <circle cx="160" cy="95" r="12" fill="rgba(0,0,0,0.12)" />
                       {/* Tooltip Label */}
-                      <g transform="translate(130, 65)">
-                        <rect width="65" height="22" rx="4" fill="#18181B" />
-                        <text x="7" y="15" fill="#FFFFFF" fontSize="9" fontWeight="700">
-                          Ubud Base
+                      <g transform="translate(125, 62)">
+                        <rect width="72" height="24" rx="4" fill="#18181B" />
+                        <text x="8" y="16" fill="#FFFFFF" fontSize="9.5" fontWeight="700">
+                          {selectedItineraryTrip.dest.split(',')[0]} Base
                         </text>
                       </g>
                     </svg>
@@ -465,33 +585,35 @@ export default function Trips() {
                   </div>
                 </div>
 
-                {/* Travel Crew Obsidian Box */}
+                {/* Travel Crew Obsidian Box — Featuring Priyank Khatri & Dhyey Patel */}
                 <div className="itin-crew-card">
                   <h4 className="crew-title">Travel Crew</h4>
                   <p className="crew-sub">Manage who can view and edit this itinerary.</p>
 
                   <div className="crew-members-list">
+                    {/* Priyank Khatri */}
                     <div className="crew-member-row">
                       <img
-                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&q=80&auto=format&fit=crop"
-                        alt="Sarah Jenkins"
+                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&q=85&auto=format&fit=crop"
+                        alt="Priyank Khatri"
                         className="crew-avatar"
                       />
                       <div className="crew-info">
-                        <span className="crew-name">Sarah Jenkins</span>
-                        <span className="crew-role">TRIP OWNER</span>
+                        <span className="crew-name">Priyank Khatri</span>
+                        <span className="crew-role">TRIP OWNER • FOUNDER</span>
                       </div>
                     </div>
 
+                    {/* Dhyey Patel */}
                     <div className="crew-member-row">
                       <img
-                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&q=80&auto=format&fit=crop"
-                        alt="Mark Davis"
+                        src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&q=85&auto=format&fit=crop"
+                        alt="Dhyey Patel"
                         className="crew-avatar"
                       />
                       <div className="crew-info">
-                        <span className="crew-name">Mark Davis</span>
-                        <span className="crew-role">CAN EDIT</span>
+                        <span className="crew-name">Dhyey Patel</span>
+                        <span className="crew-role">CHIEF EXPLORER • CAN EDIT</span>
                       </div>
                     </div>
                   </div>
@@ -499,7 +621,7 @@ export default function Trips() {
                   <form className="crew-invite-row" onSubmit={handleInviteCrew}>
                     <input
                       type="email"
-                      placeholder="Email address"
+                      placeholder="Add co-traveler email..."
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       className="crew-input"
@@ -510,15 +632,18 @@ export default function Trips() {
                   </form>
                 </div>
 
-                {/* Trip Logistics Summary Pill Box */}
+                {/* Trip Logistics Summary Box */}
                 <div className="itin-logistics-summary-box" onClick={() => setShowLogisticsModal(true)}>
-                  <span className="log-hdr-lbl">TRIP LOGISTICS</span>
+                  <div className="log-hdr-flex">
+                    <span className="log-hdr-lbl">TRIP LOGISTICS</span>
+                    <span className="log-view-all-txt">View All Details →</span>
+                  </div>
 
                   <div className="log-item-line">
                     <span className="log-icon">✈️</span>
                     <div>
                       <p className="log-name">Flight MH-842</p>
-                      <p className="log-sub">Arriving 02:45 PM</p>
+                      <p className="log-sub">Arriving 02:45 PM • Gate B12</p>
                     </div>
                   </div>
 
@@ -526,7 +651,7 @@ export default function Trips() {
                     <span className="log-icon">🏨</span>
                     <div>
                       <p className="log-name">Mandapa Reserve</p>
-                      <p className="log-sub">Check-in at 03:00 PM</p>
+                      <p className="log-sub">Check-in at 03:00 PM • Ubud Suite</p>
                     </div>
                   </div>
 
@@ -534,11 +659,319 @@ export default function Trips() {
                     <span className="log-icon">🛡️</span>
                     <div>
                       <p className="log-name">Travel Insurance</p>
-                      <p className="log-sub">Active • NomadCare</p>
+                      <p className="log-sub">Active • NomadCare Platinum</p>
                     </div>
                   </div>
+
+                  <button
+                    className="itin-quick-book-cta"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowPaymentModal(true)
+                    }}
+                  >
+                    <span>Instant Booking & Payment</span>
+                    <span>→</span>
+                  </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═════════════════════════════════════════════════════════════
+            COMPLETE BOOKING & PAYMENT CHECKOUT MODAL
+        ═════════════════════════════════════════════════════════════ */}
+        {showPaymentModal && (
+          <div className="pay-modal-backdrop" onClick={() => setShowPaymentModal(false)}>
+            <div className="pay-modal-window" onClick={(e) => e.stopPropagation()}>
+              {!paymentSuccessData ? (
+                <>
+                  <div className="pay-modal-hdr">
+                    <div>
+                      <span className="pay-tag-lbl">SECURE CHECKOUT • ENCRYPTED 256-BIT</span>
+                      <h3 className="pay-title">
+                        Book {selectedItineraryTrip?.dest || 'Your Trip'}
+                      </h3>
+                    </div>
+                    <button className="pay-close-btn" onClick={() => setShowPaymentModal(false)}>
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="pay-modal-grid">
+                    {/* Left: Customizer & Order Summary */}
+                    <div className="pay-left-summary">
+                      <div className="pay-dest-preview">
+                        <img
+                          src={selectedItineraryTrip?.img || 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500&q=80'}
+                          alt="Trip Cover"
+                          className="pay-prev-img"
+                        />
+                        <div>
+                          <h4 className="pay-prev-title">{selectedItineraryTrip?.dest || 'Ubud, Bali'}</h4>
+                          <p className="pay-prev-dates">{selectedItineraryTrip?.dates || '20 Oct — 01 Nov'}</p>
+                          <span className="pay-crew-tag">Team: Priyank Khatri & Dhyey Patel</span>
+                        </div>
+                      </div>
+
+                      <div className="pay-config-group">
+                        <label className="pay-cfg-lbl">Number of Guests / Travelers</label>
+                        <div className="pay-counter-row">
+                          {[1, 2, 4, 6].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              className={`pay-count-btn ${travelersCount === num ? 'active' : ''}`}
+                              onClick={() => setTravelersCount(num)}
+                            >
+                              {num} {num === 1 ? 'Guest' : 'Guests'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pay-config-group">
+                        <label className="pay-cfg-lbl">Package Experience Tier</label>
+                        <div className="pay-tier-list">
+                          <label className="pay-tier-item">
+                            <input
+                              type="radio"
+                              name="tier"
+                              checked={selectedPackageTier === 'Luxury Suite'}
+                              onChange={() => setSelectedPackageTier('Luxury Suite')}
+                            />
+                            <div>
+                              <p className="tier-name">Luxury Rainforest Suite</p>
+                              <p className="tier-desc">5-Star Villa + Private Concierge + Airport VIP Transfer</p>
+                            </div>
+                          </label>
+
+                          <label className="pay-tier-item">
+                            <input
+                              type="radio"
+                              name="tier"
+                              checked={selectedPackageTier === 'Royal Residence'}
+                              onChange={() => setSelectedPackageTier('Royal Residence')}
+                            />
+                            <div>
+                              <p className="tier-name">Royal Presidential Estate (+₹35,000)</p>
+                              <p className="tier-desc">Private Butler + Helicopter Tour + Michelin Dining</p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Price Breakdown */}
+                      <div className="pay-breakdown-box">
+                        <div className="pbb-line">
+                          <span>Base Itinerary ({travelersCount} Guests)</span>
+                          <span>₹{((selectedItineraryTrip?.priceINR || 88000) * travelersCount).toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="pbb-line">
+                          <span>Concierge Service & Taxes (GST 18%)</span>
+                          <span>Included</span>
+                        </div>
+                        <div className="pbb-total-line">
+                          <span>Total Payable Amount</span>
+                          <span className="pbb-total-num">
+                            ₹
+                            {(
+                              (selectedItineraryTrip?.priceINR || 88000) * travelersCount +
+                              (selectedPackageTier === 'Royal Residence' ? 35000 : 0)
+                            ).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Payment Method Selector & Gateway */}
+                    <div className="pay-right-gateway">
+                      <h4 className="gateway-heading">Select Payment Method</h4>
+
+                      <div className="payment-tabs-row">
+                        {['UPI', 'Card', 'NetBanking', 'Split'].map((method) => (
+                          <button
+                            key={method}
+                            type="button"
+                            className={`pm-tab ${paymentMethod === method ? 'active' : ''}`}
+                            onClick={() => setPaymentMethod(method)}
+                          >
+                            {method === 'UPI' && '⚡ UPI / GPay'}
+                            {method === 'Card' && '💳 Card'}
+                            {method === 'NetBanking' && '🏦 Net Banking'}
+                            {method === 'Split' && '👥 Split with Crew'}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* UPI Option */}
+                      {paymentMethod === 'UPI' && (
+                        <div className="pm-upi-box">
+                          <div className="upi-qr-card">
+                            <div className="dummy-qr-box">
+                              <svg viewBox="0 0 100 100" width="90" height="90">
+                                <rect width="100" height="100" fill="#FFFFFF" />
+                                <rect x="10" y="10" width="30" height="30" fill="#18181B" />
+                                <rect x="60" y="10" width="30" height="30" fill="#18181B" />
+                                <rect x="10" y="60" width="30" height="30" fill="#18181B" />
+                                <rect x="18" y="18" width="14" height="14" fill="#FFFFFF" />
+                                <rect x="68" y="18" width="14" height="14" fill="#FFFFFF" />
+                                <rect x="18" y="68" width="14" height="14" fill="#FFFFFF" />
+                                <rect x="46" y="46" width="10" height="10" fill="#18181B" />
+                                <rect x="60" y="60" width="20" height="20" fill="#18181B" />
+                              </svg>
+                            </div>
+                            <span className="qr-scan-txt">Scan with GPay / PhonePe / Paytm</span>
+                          </div>
+
+                          <div className="upi-input-group">
+                            <label>Or Enter UPI ID</label>
+                            <input
+                              type="text"
+                              value={upiId}
+                              onChange={(e) => setUpiId(e.target.value)}
+                              placeholder="username@okhdfcbank"
+                              className="pay-input"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Card Option */}
+                      {paymentMethod === 'Card' && (
+                        <div className="pm-card-box">
+                          <div className="pm-field">
+                            <label>Card Number</label>
+                            <input
+                              type="text"
+                              value={cardNumber}
+                              onChange={(e) => setCardNumber(e.target.value)}
+                              className="pay-input"
+                            />
+                          </div>
+
+                          <div className="pm-grid-2">
+                            <div className="pm-field">
+                              <label>Expiry Date</label>
+                              <input
+                                type="text"
+                                value={cardExpiry}
+                                onChange={(e) => setCardExpiry(e.target.value)}
+                                className="pay-input"
+                              />
+                            </div>
+                            <div className="pm-field">
+                              <label>CVV / CVC</label>
+                              <input
+                                type="password"
+                                value={cardCvv}
+                                maxLength="3"
+                                onChange={(e) => setCardCvv(e.target.value)}
+                                className="pay-input"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Net Banking */}
+                      {paymentMethod === 'NetBanking' && (
+                        <div className="pm-banks-grid">
+                          {['HDFC Bank', 'ICICI Bank', 'State Bank of India', 'Axis Bank'].map((b) => (
+                            <button key={b} type="button" className="bank-pill active">
+                              🏛️ {b}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Split with Crew */}
+                      {paymentMethod === 'Split' && (
+                        <div className="pm-split-box">
+                          <p className="split-desc">
+                            Split 50/50 with <strong>Priyank Khatri</strong> and <strong>Dhyey Patel</strong>. An automated payment link will be sent to both members.
+                          </p>
+                          <div className="split-amount-badge">
+                            Your Share: ₹
+                            {(
+                              ((selectedItineraryTrip?.priceINR || 88000) * travelersCount) /
+                              2
+                            ).toLocaleString('en-IN')}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pay Button */}
+                      <button
+                        className="pay-submit-btn"
+                        onClick={handleProcessPayment}
+                        disabled={isProcessingPayment}
+                      >
+                        {isProcessingPayment ? (
+                          <span>Processing Secure Payment... ⏳</span>
+                        ) : (
+                          <span>
+                            Pay ₹
+                            {(
+                              (selectedItineraryTrip?.priceINR || 88000) * travelersCount +
+                              (selectedPackageTier === 'Royal Residence' ? 35000 : 0)
+                            ).toLocaleString('en-IN')}{' '}
+                            & Confirm Booking →
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Payment Success View */
+                <div className="pay-success-window">
+                  <div className="pay-success-icon-box">✓</div>
+                  <h3 className="ps-title">Booking Confirmed & Paid!</h3>
+                  <p className="ps-sub">
+                    Your luxury reservation for <strong>{paymentSuccessData.dest}</strong> has been secured with priority concierge status.
+                  </p>
+
+                  <div className="ps-ticket-card">
+                    <div className="pst-line">
+                      <span className="pst-lbl">BOOKING REF</span>
+                      <span className="pst-val font-mono">{paymentSuccessData.ref}</span>
+                    </div>
+                    <div className="pst-line">
+                      <span className="pst-lbl">GUESTS & PACKAGE</span>
+                      <span className="pst-val">{paymentSuccessData.travelers} Guests • {paymentSuccessData.tier}</span>
+                    </div>
+                    <div className="pst-line">
+                      <span className="pst-lbl">TOTAL AMOUNT PAID</span>
+                      <span className="pst-val text-gold">{paymentSuccessData.amount}</span>
+                    </div>
+                    <div className="pst-line">
+                      <span className="pst-lbl">ORGANIZERS</span>
+                      <span className="pst-val">Priyank Khatri & Dhyey Patel</span>
+                    </div>
+                  </div>
+
+                  <div className="ps-actions-row">
+                    <button
+                      className="ps-btn-download"
+                      onClick={() => toast.success('📥 Official PDF Invoice & Boarding Passes downloaded!')}
+                    >
+                      Download PDF Invoice & Vouchers
+                    </button>
+                    <button
+                      className="ps-btn-done"
+                      onClick={() => {
+                        setShowPaymentModal(false)
+                        setPaymentSuccessData(null)
+                        navigate('/bookings')
+                      }}
+                    >
+                      View in Bookings →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -552,16 +985,21 @@ export default function Trips() {
               {/* Left Photo Showcase */}
               <div className="log-drawer-left-photo">
                 <img
-                  src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&h=1100&q=85&auto=format&fit=crop"
-                  alt="Bali Stay"
+                  src={
+                    selectedItineraryTrip?.img ||
+                    'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1000&h=1200&q=90&auto=format&fit=crop'
+                  }
+                  alt="Destination Stay"
                   className="log-photo-bg"
                 />
                 <div className="log-photo-gradient" />
                 <div className="log-photo-caption">
                   <span className="log-days-tag">DAYS TO GO: 12</span>
-                  <h3 className="log-photo-title">Bali Itinerary</h3>
+                  <h3 className="log-photo-title">
+                    {selectedItineraryTrip?.dest || 'Bali Itinerary'}
+                  </h3>
                   <p className="log-photo-sub">
-                    Your spiritual journey through the heart of Ubud begins with seamless transitions and refined comfort.
+                    Your luxury journey through {selectedItineraryTrip?.dest || 'the heart of Ubud'} begins with seamless transitions and refined comfort.
                   </p>
                 </div>
               </div>
@@ -620,14 +1058,18 @@ export default function Trips() {
                       </div>
                       <div>
                         <span className="log-card-type">ACCOMMODATION</span>
-                        <h4 className="log-card-name">Mandapa Reserve</h4>
+                        <h4 className="log-card-name">
+                          {selectedItineraryTrip?.dest?.includes('Agra') ? 'The Oberoi Amarvilas' : 'Mandapa Reserve'}
+                        </h4>
                       </div>
                       <div className="log-card-meta-right">
-                        <span className="meta-luxury">★ LUXURY</span>
+                        <span className="meta-luxury">★ LUXURY RESIDENCE</span>
                       </div>
                     </div>
 
-                    <p className="log-location-text">📍 Ubud, Gianyar, Bali</p>
+                    <p className="log-location-text">
+                      📍 {selectedItineraryTrip?.dest || 'Ubud, Gianyar, Bali'}
+                    </p>
 
                     <div className="log-card-row2">
                       <div>
@@ -636,9 +1078,12 @@ export default function Trips() {
                       </div>
                       <button
                         className="log-view-details-link"
-                        onClick={() => navigate('/bookings')}
+                        onClick={() => {
+                          setShowLogisticsModal(false)
+                          setShowPaymentModal(true)
+                        }}
                       >
-                        VIEW DETAILS →
+                        BOOK & PAY NOW →
                       </button>
                     </div>
                   </div>
@@ -670,9 +1115,12 @@ export default function Trips() {
                 <div className="log-actions-column">
                   <button
                     className="log-btn-primary"
-                    onClick={() => toast.success('📥 Digital Travel Vouchers downloaded!')}
+                    onClick={() => {
+                      setShowLogisticsModal(false)
+                      setShowPaymentModal(true)
+                    }}
                   >
-                    <span>DOWNLOAD DIGITAL VOUCHERS</span>
+                    <span>BOOK TRIP & INSTANT PAYMENT</span>
                     <span>→</span>
                   </button>
 

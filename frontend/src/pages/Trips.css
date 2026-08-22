@@ -205,7 +205,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  min-width: 160px;
+  min-width: 170px;
   z-index: 20;
   overflow: hidden;
 }
@@ -375,7 +375,7 @@
 }
 
 /* ═════════════════════════════════════════════════════════════
-   VIEW MODE B: FULL ITINERARY VIEW (Image 2)
+   VIEW MODE B: FULL ITINERARY VIEW (1:1 Matching Image 2)
 ═════════════════════════════════════════════════════════════ */
 .itinerary-scroll-container {
   flex: 1;
@@ -383,11 +383,13 @@
   padding: 24px 48px 90px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 }
 
 .itin-back-nav {
-  margin-bottom: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .itin-back-btn {
@@ -399,41 +401,92 @@
   cursor: pointer;
 }
 
+.itin-top-action-pills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.itin-pill-book-btn {
+  background: #18181B;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.itin-pill-book-btn:hover {
+  background: #2E2E33;
+  transform: translateY(-1px);
+}
+
+.itin-pill-logistics-btn {
+  background: #EFEAE2;
+  color: #18181B;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.itin-pill-logistics-btn:hover {
+  background: #DDD7CE;
+}
+
+/* FIXED & SOLID HERO PANORAMA */
 .itin-hero-panorama {
   position: relative;
-  height: 380px;
-  border-radius: 12px;
+  width: 100%;
+  min-height: 420px;
+  height: 420px;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
 }
 
 .itin-hero-img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .itin-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%);
+  pointer-events: none;
 }
 
 .itin-glass-card {
   position: absolute;
-  top: 36px;
-  left: 36px;
-  bottom: 36px;
-  width: 360px;
-  background: rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  padding: 24px;
+  top: 32px;
+  left: 32px;
+  bottom: 32px;
+  width: 380px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   color: #FFFFFF;
+  z-index: 10;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
 }
 
 .glass-badge-row {
@@ -448,32 +501,33 @@
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 4px;
 }
 
 .glass-days-left {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .glass-card-title {
   font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   line-height: 1.2;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .glass-card-desc {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.45;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.5;
 }
 
 .glass-actions-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .glass-btn-white {
@@ -484,11 +538,19 @@
   background: #FFFFFF;
   color: #18181B;
   border: none;
-  padding: 9px 16px;
+  padding: 11px 18px;
   border-radius: 4px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.glass-btn-white:hover {
+  background: #F4EFE6;
+  transform: translateY(-1px);
 }
 
 .glass-btn-outline {
@@ -496,14 +558,18 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.4);
   color: #FFFFFF;
-  padding: 9px 16px;
+  padding: 10px 18px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.glass-btn-outline:hover {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* Itinerary Body Grid */
@@ -699,7 +765,7 @@
   cursor: pointer;
 }
 
-/* Travel Crew Box */
+/* Travel Crew Box (Featuring Priyank Khatri & Dhyey Patel) */
 .itin-crew-card {
   background: #18181B;
   color: #FFFFFF;
@@ -735,10 +801,11 @@
 }
 
 .crew-avatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #C9963A;
 }
 
 .crew-info {
@@ -747,7 +814,7 @@
 }
 
 .crew-name {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
 }
 
@@ -804,11 +871,23 @@
   border-color: #18181B;
 }
 
+.log-hdr-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .log-hdr-lbl {
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: 0.14em;
   color: #8C867A;
+}
+
+.log-view-all-txt {
+  font-size: 11px;
+  font-weight: 700;
+  color: #18181B;
 }
 
 .log-item-line {
@@ -830,6 +909,491 @@
 .log-sub {
   font-size: 11px;
   color: #8C867A;
+}
+
+.itin-quick-book-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #18181B;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.2s ease;
+}
+
+.itin-quick-book-cta:hover {
+  background: #2E2E33;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   COMPLETE PAYMENT CHECKOUT MODAL
+═════════════════════════════════════════════════════════════ */
+.pay-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.pay-modal-window {
+  background: #FFFFFF;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px 36px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+  border: 1px solid #EFEAE2;
+}
+
+.pay-modal-hdr {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.pay-tag-lbl {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #10B981;
+}
+
+.pay-title {
+  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #18181B;
+}
+
+.pay-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #8C867A;
+}
+
+.pay-modal-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr;
+  gap: 32px;
+}
+
+/* Left Summary */
+.pay-left-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #FAF8F5;
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid #EFEAE2;
+}
+
+.pay-dest-preview {
+  display: flex;
+  gap: 14px;
+}
+
+.pay-prev-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.pay-prev-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #18181B;
+}
+
+.pay-prev-dates {
+  font-size: 12px;
+  color: #8C867A;
+}
+
+.pay-crew-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #C9963A;
+  margin-top: 4px;
+  display: block;
+}
+
+.pay-cfg-lbl {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #555048;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.pay-counter-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pay-count-btn {
+  flex: 1;
+  padding: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pay-count-btn.active {
+  background: #18181B;
+  color: #FFFFFF;
+  border-color: #18181B;
+}
+
+.pay-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pay-tier-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  padding: 10px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tier-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #18181B;
+}
+
+.tier-desc {
+  font-size: 10.5px;
+  color: #8C867A;
+}
+
+.pay-breakdown-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #E5DFD5;
+  padding-top: 14px;
+}
+
+.pbb-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #736B5E;
+}
+
+.pbb-total-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #18181B;
+  padding-top: 8px;
+  border-top: 1px dashed #DDD7CE;
+}
+
+.pbb-total-num {
+  font-size: 18px;
+  color: #18181B;
+}
+
+/* Right Gateway */
+.pay-right-gateway {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.gateway-heading {
+  font-size: 14px;
+  font-weight: 800;
+  color: #18181B;
+}
+
+.payment-tabs-row {
+  display: flex;
+  gap: 6px;
+}
+
+.pm-tab {
+  flex: 1;
+  padding: 8px 4px;
+  background: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #555048;
+  cursor: pointer;
+}
+
+.pm-tab.active {
+  background: #18181B;
+  color: #FFFFFF;
+  border-color: #18181B;
+}
+
+.pm-upi-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.upi-qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: #FAF8F5;
+  padding: 16px 24px;
+  border-radius: 8px;
+  border: 1px solid #E5DFD5;
+}
+
+.dummy-qr-box {
+  background: #FFFFFF;
+  padding: 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.qr-scan-txt {
+  font-size: 11px;
+  color: #8C867A;
+  font-weight: 600;
+}
+
+.upi-input-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upi-input-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555048;
+}
+
+.pay-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #E5DFD5;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+}
+
+.pm-card-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pm-field label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #555048;
+}
+
+.pm-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pm-banks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.bank-pill {
+  padding: 12px;
+  background: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bank-pill.active {
+  border-color: #18181B;
+}
+
+.pm-split-box {
+  background: #FAF8F5;
+  padding: 16px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.split-desc {
+  font-size: 12px;
+  color: #555048;
+  line-height: 1.45;
+}
+
+.split-amount-badge {
+  font-size: 14px;
+  font-weight: 800;
+  color: #D97706;
+}
+
+.pay-submit-btn {
+  background: #18181B;
+  color: #FFFFFF;
+  border: none;
+  padding: 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.pay-submit-btn:hover:not(:disabled) {
+  background: #2E2E33;
+  transform: translateY(-1px);
+}
+
+/* Success Card */
+.pay-success-window {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+  gap: 16px;
+}
+
+.pay-success-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+}
+
+.ps-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #18181B;
+}
+
+.ps-sub {
+  font-size: 13.5px;
+  color: #736B5E;
+  max-width: 480px;
+}
+
+.ps-ticket-card {
+  width: 100%;
+  max-width: 480px;
+  background: #FAF8F5;
+  border: 1px solid #EFEAE2;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pst-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.pst-lbl {
+  color: #8C867A;
+  font-weight: 600;
+}
+
+.pst-val {
+  font-weight: 700;
+  color: #18181B;
+}
+
+.text-gold {
+  color: #C9963A !important;
+  font-size: 15px;
+}
+
+.ps-actions-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ps-btn-download {
+  background: #18181B;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ps-btn-done {
+  background: #F4EFE6;
+  border: 1px solid #E5DFD5;
+  padding: 12px 22px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 /* ═════════════════════════════════════════════════════════════
@@ -1242,7 +1806,8 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .journeys-editorial-grid,
-  .itin-body-grid {
+  .itin-body-grid,
+  .pay-modal-grid {
     grid-template-columns: 1fr;
   }
   .logistics-drawer-window {
