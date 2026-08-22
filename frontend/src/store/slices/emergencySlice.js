@@ -1,12 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
+const DEFAULT_CONTACTS = [
+  { _id: 'ec_1', id: 'ec_1', name: 'Rajesh Sharma', rel: 'Father', phone: '+91 98765 43210', initial: 'R' },
+  { _id: 'ec_2', id: 'ec_2', name: 'Priya Patel', rel: 'Partner', phone: '+91 91234 56789', initial: 'P' },
+];
+
 export const fetchContacts = createAsyncThunk('emergency/fetchContacts', async (_, thunkAPI) => {
   try {
     const { data } = await api.get('/emergency');
-    return data;
+    return data && data.length > 0 ? data : DEFAULT_CONTACTS;
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response.data.message || error.message);
+    return DEFAULT_CONTACTS;
   }
 });
 
