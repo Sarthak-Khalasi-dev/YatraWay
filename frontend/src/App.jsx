@@ -65,7 +65,7 @@ function AppContent() {
             <Route path="/destinations" element={<Wrap><Destinations /></Wrap>} />
             <Route path="/trips"        element={<Wrap><Trips /></Wrap>} />
             <Route path="/bookings"     element={<Wrap><Bookings /></Wrap>} />
-            <Route path="/experiences"  element={<Wrap><Experiences /></Wrap>} />
+            <Route path="/experiences"  element={<Navigate to="/destinations" replace />} />
             <Route path="/favorites"    element={<Wrap><Favorites /></Wrap>} />
             <Route path="/messages"     element={<Wrap><Messages /></Wrap>} />
             <Route path="/travel-style" element={<Wrap><TravelStyle /></Wrap>} />
