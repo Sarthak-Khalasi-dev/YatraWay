@@ -5,7 +5,7 @@ import './Messages.css'
 const CONTACTS = [
   {
     id: 1,
-    name: 'Wanderlust Concierge',
+    name: 'YatraWay Concierge',
     role: 'Private Travel Assistant',
     badge: 'VERIFIED CONCIERGE',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&q=80&auto=format&fit=crop',

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider }   from './context/AuthContext'
 import { ThemeProvider }  from './context/ThemeContext'
 import { StorageProvider } from './context/StorageContext'
 import { ToastProvider }  from './context/ToastContext'
@@ -48,10 +49,10 @@ function AppContent() {
   return (
     <>
       <Helmet>
-        <title>NomadNest — Premium Travel Planner</title>
-        <meta name="description" content="Plan your dream journeys, discover hidden gems, and create unforgettable memories with NomadNest." />
-        <meta name="keywords" content="travel, trip planner, destinations, adventure, solo travel" />
-        <meta property="og:title" content="NomadNest — Travel Planning Made Simple" />
+        <title>YatraWay — Premium Travel Planner</title>
+        <meta name="description" content="Plan your dream journeys, discover hidden gems, and create unforgettable memories with YatraWay." />
+        <meta name="keywords" content="travel, trip planner, destinations, adventure, solo travel, YatraWay" />
+        <meta property="og:title" content="YatraWay — Travel Planning Made Simple" />
         <meta property="og:description" content="Join 50K+ travelers exploring 120+ destinations." />
         <meta property="og:type" content="website" />
       </Helmet>
@@ -79,15 +80,17 @@ function AppContent() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <BrowserRouter>
-          <StorageProvider>
-            <ToastProvider>
-              <AppContent />
-            </ToastProvider>
-          </StorageProvider>
-        </BrowserRouter>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <BrowserRouter>
+            <StorageProvider>
+              <ToastProvider>
+                <AppContent />
+              </ToastProvider>
+            </StorageProvider>
+          </BrowserRouter>
+        </ThemeProvider>
+      </AuthProvider>
     </ErrorBoundary>
   )
 }

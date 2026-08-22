@@ -25,7 +25,7 @@ export default function AuthHero() {
           </svg>
         </div>
         <div className="flex flex-col leading-none">
-          <span className="font-body text-[12.5px] font-bold text-white tracking-[2.5px]">WANDERLUST</span>
+          <span className="font-body text-[12.5px] font-bold text-white tracking-[2.5px]">YATRAWAY</span>
           <span className="font-body text-[9.5px] font-normal text-white/60 tracking-[3.5px] mt-[3px]">TRAVEL</span>
         </div>
       </div>
